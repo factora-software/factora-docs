@@ -1,0 +1,337 @@
+{
+  "info": {
+    "_postman_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "name": "Factora E2E - C2 Smoke",
+    "description": "End-to-end smoke test for Factora's atomic invoice API plus KoSIT validation.\n\nFlow:\n1. POST a maximal BR-DE-conformant invoice (all C2 fields set) via the atomic endpoint.\n2. GET the generated CII (XRechnung) XML.\n3. GET the generated UBL (Peppol BIS 3.0) XML.\n4. Validate CII against the XRechnung KoSIT validator (kosit_url).\n5. Validate UBL against the Peppol KoSIT validator (kosit_peppol_url).\n\nEnvironment variables: base_url, api_token, kosit_url, kosit_peppol_url.\nCollection-level pre-request script auto-generates an Idempotency-Key per run.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{api_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Fresh idempotency key + unique invoice number per collection run.",
+          "pm.collectionVariables.set('idempotency_key', pm.variables.replaceIn('{{$guid}}'));",
+          "pm.collectionVariables.set('invoice_number', 'INV-QA-' + pm.variables.replaceIn('{{$guid}}').replace(/-/g, '').slice(0, 10));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "idempotency_key",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "invoice_number",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "invoice_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cii_xml",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ubl_xml",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1 - Atomic Invoice",
+      "item": [
+        {
+          "name": "1.1 Create atomic invoice (maximal C2 payload)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 Created', function () { pm.response.to.have.status(201); });",
+                  "pm.test('invoice id returned and stored', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.valid, 'response.valid').to.equal(true);",
+                  "    pm.expect(json.data.id, 'response.data.id').to.not.be.undefined;",
+                  "    pm.collectionVariables.set('invoice_id', String(json.data.id));",
+                  "});",
+                  "pm.test('PDF + XML base64 returned', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.data, 'response.data').to.have.property('pdf_base64');",
+                  "    pm.expect(json.data, 'response.data').to.have.property('xml_base64');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotency_key}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\n  \"api_mode\": \"atomic_single_post\",\n  \"invoice_header\": {\n    \"invoice_number\": \"{{invoice_number}}\",\n    \"invoice_type\": \"380\",\n    \"invoice_date\": \"2026-05-20\",\n    \"delivery_date\": \"2026-05-18\",\n    \"currency\": \"EUR\",\n    \"order_reference\": \"PO-2026-12345\",\n    \"buyer_reference\": \"991-12345-67\",\n    \"payment_due_date\": \"2026-06-19\",\n    \"payment_terms\": \"Zahlung innerhalb von 30 Tagen netto, ohne Abzug.\",\n    \"payment_means_code\": \"58\",\n    \"contract_reference\": \"CTR-2026-042\",\n    \"project_reference\": \"PRJ-2026-C2\"\n  },\n  \"validation_totals\": {\n    \"net_amount\": \"1350.00\",\n    \"vat_amount\": \"238.50\",\n    \"gross_amount\": \"1588.50\"\n  },\n  \"seller_snapshot\": {\n    \"name\": \"Factora Test GmbH\",\n    \"vat_id\": \"DE123456789\",\n    \"tax_number\": \"33/123/45678\",\n    \"street\": \"Musterstrasse 1\",\n    \"zip\": \"21391\",\n    \"city\": \"Reppenstedt\",\n    \"country\": \"DE\",\n    \"iban\": \"DE89370400440532013000\",\n    \"bic\": \"COBADEFFXXX\",\n    \"contact\": {\n      \"name\": \"Max Verkauf\",\n      \"phone\": \"+49 4131 1234567\",\n      \"email\": \"verkauf@factora-test.example\"\n    }\n  },\n  \"buyer\": {\n    \"name\": \"Beispiel Empfaenger GmbH\",\n    \"vat_id\": \"DE987654321\",\n    \"street\": \"Empfangsweg 5\",\n    \"zip\": \"10115\",\n    \"city\": \"Berlin\",\n    \"country\": \"DE\",\n    \"contact\": {\n      \"name\": \"Anna Empfang\",\n      \"phone\": \"+49 30 9876543\",\n      \"email\": \"anna@empfaenger-gmbh.example\"\n    }\n  },\n  \"items\": [\n    {\n      \"description\": \"Consulting-Service Mai 2026\",\n      \"quantity\": \"10.000\",\n      \"unit\": \"HUR\",\n      \"unit_price_net\": \"120.00\",\n      \"vat_rate\": \"19.00\",\n      \"tax_category_code\": \"S\"\n    },\n    {\n      \"description\": \"Schulungsmaterial gedruckt\",\n      \"quantity\": \"5.000\",\n      \"unit\": \"C62\",\n      \"unit_price_net\": \"30.00\",\n      \"vat_rate\": \"7.00\",\n      \"tax_category_code\": \"S\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/invoices/atomic/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invoices",
+                "atomic",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.2 Get CII (XRechnung) XML",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Content-Type is XML', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type') || '').to.match(/xml/);",
+                  "});",
+                  "pm.test('Body looks right', function () { pm.expect(pm.response.text()).to.match(/CrossIndustryInvoice/); });",
+                  "pm.collectionVariables.set('cii_xml', pm.response.text());"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/xml"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/invoices/{{invoice_id}}/xml/cii/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invoices",
+                "{{invoice_id}}",
+                "xml",
+                "cii",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "1.3 Get UBL (Peppol BIS 3.0) XML",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Content-Type is XML', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type') || '').to.match(/xml/);",
+                  "});",
+                  "pm.test('Body looks right', function () { pm.expect(pm.response.text()).to.match(/<Invoice[\\s>]/); });",
+                  "pm.collectionVariables.set('ubl_xml', pm.response.text());"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/xml"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/invoices/{{invoice_id}}/xml/ubl/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "invoices",
+                "{{invoice_id}}",
+                "xml",
+                "ubl",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2 - KoSIT Validation",
+      "item": [
+        {
+          "name": "2.1 Validate CII against KoSIT (XRechnung)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('cii_xml')) {",
+                  "    throw new Error('cii_xml is empty - run the XML request first');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.text();",
+                  "pm.test('KoSIT assessment valid (root @valid=true)', function () {",
+                  "    pm.expect(body, 'KoSIT report').to.match(/valid=\"true\"/);",
+                  "    pm.expect(body).to.not.match(/valid=\"false\"/);",
+                  "    if (/valid=\"false\"/.test(body)) {",
+                  "        const m = body.match(/<[^>]*message[\\s\\S]{0,300}?<\\/[^>]*message>/);",
+                  "        if (m) console.log('First KoSIT message:\\n' + m[0]);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/xml"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "xml"
+                }
+              },
+              "raw": "{{cii_xml}}"
+            },
+            "url": {
+              "raw": "{{kosit_url}}/",
+              "host": [
+                "{{kosit_url}}"
+              ],
+              "path": [
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2.2 Validate UBL against KoSIT (Peppol)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('ubl_xml')) {",
+                  "    throw new Error('ubl_xml is empty - run the XML request first');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
+                  "const body = pm.response.text();",
+                  "pm.test('KoSIT assessment valid (root @valid=true)', function () {",
+                  "    pm.expect(body, 'KoSIT report').to.match(/valid=\"true\"/);",
+                  "    pm.expect(body).to.not.match(/valid=\"false\"/);",
+                  "    if (/valid=\"false\"/.test(body)) {",
+                  "        const m = body.match(/<[^>]*message[\\s\\S]{0,300}?<\\/[^>]*message>/);",
+                  "        if (m) console.log('First KoSIT message:\\n' + m[0]);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/xml"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "xml"
+                }
+              },
+              "raw": "{{ubl_xml}}"
+            },
+            "url": {
+              "raw": "{{kosit_peppol_url}}/",
+              "host": [
+                "{{kosit_peppol_url}}"
+              ],
+              "path": [
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
