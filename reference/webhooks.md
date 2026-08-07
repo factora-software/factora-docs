@@ -19,8 +19,40 @@ Verwaltung über die Endpunkte unter `/api/v1/webhooks/` (siehe
 | `invoice.cancelled` | Rechnung storniert |
 | `invoice.rejected` | Rechnung abgelehnt (Prüf-/Zustellfehler) |
 
-Beim Anlegen eines Webhooks wählen Sie die abonnierten Ereignisse. Zum Testen
-existiert zusätzlich `webhook.test` (siehe unten).
+Beim Anlegen eines Webhooks wählen Sie über `subscribed_events` die abonnierten
+Ereignisse. Zum Testen existiert zusätzlich `webhook.test` (siehe unten).
+
+## Payload
+
+Der Rumpf ist ein **flaches JSON-Objekt** — ein Schnappschuss der Rechnung zum
+Zeitpunkt des Ereignisses:
+
+| Feld | Inhalt |
+|---|---|
+| `event_type` | Ereignistyp (siehe oben) |
+| `invoice_number` | Rechnungsnummer |
+| `invoice_id` | interne ID |
+| `status` | Rechnungsstatus |
+| `invoice_type` | Rechnungstyp |
+| `total` / `subtotal` / `tax_amount` | Beträge (String, Dezimal) |
+| `currency` | Währungscode |
+| `customer_name` | Kundenname |
+| `invoice_date` / `due_date` | Rechnungs- und Fälligkeitsdatum (ISO) |
+| `occurred_at` | Zeitstempel des Ereignisses (ISO 8601) |
+
+Beispiel (`invoice.finalized`):
+
+```json
+{
+  "event_type": "invoice.finalized",
+  "invoice_number": "RE-2026-0001",
+  "invoice_id": 42,
+  "status": "finalized",
+  "total": "595.00",
+  "currency": "EUR",
+  "occurred_at": "2026-06-18T10:15:00+00:00"
+}
+```
 
 ## Aufbau der Zustellung
 
@@ -45,8 +77,8 @@ Der Empfänger berechnet denselben HMAC mit dem **bei der Webhook-Anlage
 vereinbarten Secret** über den **rohen Request-Body** und vergleicht das
 Ergebnis. Stimmen die Werte nicht überein, ist der Request abzulehnen.
 
-> Das Secret wird auf Ihrer Seite gewählt und bei Factora verschlüsselt
-> gespeichert. Es verlässt das System nicht im Klartext.
+> Das Secret wird auf Ihrer Seite gewählt und bei Factora **AES-256-GCM**-
+> verschlüsselt gespeichert. Es verlässt das System nicht im Klartext.
 
 ## Zustellung & Wiederholung
 
@@ -57,7 +89,11 @@ Ergebnis. Stimmen die Werte nicht überein, ist der Request abzulehnen.
 | Maximale Versuche | 5 |
 | Wiederholungsabstände | 30 s · 2 min · 10 min · 1 h · 6 h |
 | Weiterleitungen | werden nicht gefolgt (Schutz gegen Rebinding) |
-| Automatische Abschaltung | nach mehreren aufeinanderfolgenden Fehlschlägen |
+| Gespeicherter Antwort-Rumpf | die ersten 2.000 Zeichen |
+| Automatische Abschaltung | nach **8** aufeinanderfolgenden Fehlschlägen |
+
+Ein automatisch abgeschalteter Endpunkt lässt sich in der Console wieder
+aktivieren.
 
 Die Zustellhistorie eines Webhooks ist über
 `GET /webhooks/{id}/deliveries/` abrufbar (Versuche, Status, Antwortzeit,
@@ -81,3 +117,6 @@ einer Fehlerbeschreibung (HTTP 502).
 - Nur **HTTPS**.
 - Nur **öffentlich erreichbare** Adressen (interne/lokale Hosts werden
   abgelehnt — SSRF-Schutz).
+- Die Prüfung läuft nicht nur beim Anlegen, sondern **unmittelbar vor jedem
+  Versand erneut** — damit greift ein nachträgliches Umbiegen des DNS-Namens
+  auf eine interne Adresse (DNS-Rebinding) nicht.

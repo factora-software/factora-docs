@@ -20,15 +20,44 @@ Erforderlicher Scope: `exports:read`.
 | Eigenschaft | Wert |
 |---|---|
 | Medientyp | `text/csv; charset=windows-1252` |
-| Kodierung | Windows-1252 (CP1252) — DATEV-kompatibel |
+| Kodierung | Windows-1252 (CP1252) mit sicherer Transliteration — DATEV-kompatibel |
+| Trennzeichen | Semikolon (`;`) |
+| Text-Quoting | nur bei Bedarf (`QUOTE_MINIMAL`) |
+| Dezimaltrennzeichen | Komma (deutsches Format, z. B. `595,00`) |
+| Belegdatum | `DDMM` (z. B. `1806`) |
 | Dateiname | `datev_{date_from}_{date_to}.csv` |
-| Format | DATEV-Buchungsdaten (Buchungsstapel) |
+| Format | DATEV-Buchungsstapel, **118 Spalten** |
 | Umfang | alle finalisierten Rechnungen im Zeitraum (Entwürfe ausgeschlossen), kontogebunden je Konto |
 
-Jede Rechnung wird als Buchungszeile abgebildet; bei gemischten Steuersätzen
-erfolgt eine Aufteilung je Satz. Enthalten sind u. a. Betrag, Soll/Haben-
-Kennzeichen, Konto und Gegenkonto, Buchungsschlüssel (BU), Belegdatum sowie
-die Debitorennummer (sofern am Käufer hinterlegt).
+Die Datei beginnt mit einer Kopfzeile aus exakt 118 Spaltennamen, gefolgt von
+einer Buchungszeile je Rechnung. Die ersten Spalten:
+
+| # | Spaltenname |
+|---|---|
+| 1 | Umsatz (ohne Soll/Haben-Kz) |
+| 2 | Soll/Haben-Kennzeichen |
+| 3 | WKZ Umsatz |
+| 4 | Kurs |
+| 5 | Basis-Umsatz |
+| 6 | WKZ Basis-Umsatz |
+| 7 | Konto |
+| 8 | Gegenkonto (ohne BU-Schlüssel) |
+| 9 | BU-Schlüssel |
+| 10 | Belegdatum |
+
+Weitere Spalten umfassen u. a. Belegfeld 1/2, Buchungstext, Beleginfo 1–8 und
+die KOST-Felder. Bei gemischten Steuersätzen erfolgt eine Aufteilung je Satz.
+
+**Debitorennummer.** Das Feld *Gegenkonto* nutzt die am Kunden hinterlegte
+Debitorennummer. Fehlt sie (Altbestand), greift ein synthetischer Fallback
+(`10000` + Kunden-ID), damit bestehende Exporte unverändert bleiben.
+
+> **Zur Versionsangabe.** Der Export schreibt die 118-spaltige
+> Buchungsstapel-Feldreihe samt Spalten-Kopfzeile. Eine separate
+> **EXTF-Metadatenzeile** (Formatname, Versionsnummer, Berater-/Mandanten-Nr.,
+> WJ-Beginn, SKR) wird **nicht** ausgegeben — es steckt also kein
+> maschinenlesbarer Versionsmarker in der Datei. Eine Versionsangabe bezieht
+> sich auf das Feld-Layout, nicht auf eine im Export hinterlegte Formatversion.
 
 ### Fehler
 

@@ -18,16 +18,68 @@ verschiedene Ausgabeformate generiert.
 Die **XRechnung** ist der deutsche CIUS (Core Invoice Usage Specification)
 der EN 16931 und Pflichtformat für Rechnungen an öffentliche Auftraggeber
 (B2G). Factora erzeugt die XRechnung in **CII-Syntax** (UN/CEFACT
-Cross-Industry Invoice). Unterstützt werden u. a. Leitweg-ID (B2G),
-Reverse-Charge-Hinweise, Abschläge und Korrekturbezüge.
+Cross-Industry Invoice); Wurzelelement ist `rsm:CrossIndustryInvoice`.
+Unterstützt werden u. a. Leitweg-ID (B2G), Reverse-Charge-Hinweise,
+Abschläge und Korrekturbezüge.
+
+Als Spezifikationskennung (BT-24) wird standardmäßig gesetzt:
+
+```
+urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0
+```
+
+Als Geschäftsprozess (BT-23):
+
+```
+urn:fdc:peppol.eu:2017:poacc:billing:01:1.0
+```
+
+Ein im Payload explizit gesetztes `invoice_header.customization_id`
+überschreibt den Default.
+
+**Syntax-Auswahl.** Standard ist CII (XRechnung). Auf UBL (Peppol) wird
+umgeschaltet, wenn eine Peppol-Customization explizit gesetzt ist oder der
+Käufer eine Peppol-Teilnehmerkennung trägt und keine Leitweg-ID (B2G)
+vorliegt.
 
 ### ZUGFeRD (PDF/A-3)
 
 **ZUGFeRD** ist eine Hybrid-Rechnung: ein optisch lesbares **PDF/A-3** mit
 **eingebetteter CII-XML**. Der Empfänger kann das PDF wie gewohnt ansehen,
-während Buchhaltungssysteme die strukturierten Daten direkt auslesen. Die
-XML entspricht inhaltlich der XRechnung. Zusätzliche Anhänge (z. B.
-Lieferschein, Leistungsnachweis) können in das PDF/A-3 eingebettet werden.
+während Buchhaltungssysteme die strukturierten Daten direkt auslesen.
+Zusätzliche Anhänge (z. B. Lieferschein, Leistungsnachweis) können in das
+PDF/A-3 eingebettet werden.
+
+### PDF/A-3B und Factur-X-Kennzeichnung
+
+Jedes erzeugte PDF ist ein **PDF/A-3B** und deklariert das im XMP-Paket
+(`pdfaid:part` = 3, `pdfaid:conformance` = B). Eingebettete Dateien werden als
+normgerechte *associated files* geführt (`/AF`, `/AFRelationship`).
+
+Darauf liegt die **Factur-X-Kennzeichnung** als eigene Ebene. Sie wird nur
+geschrieben, wenn das Profil eine Conformance-Angabe festlegt — geraten wird
+nichts. Beide aktuellen Profile legen sie fest:
+
+| Profil | `fx:ConformanceLevel` | `fx:Version` | Eingebettete XML |
+|---|---|---|---|
+| XRechnung | `XRECHNUNG` | `3.0` | `xrechnung.xml` |
+| EN 16931 | `EN 16931` | `1.0` | `factur-x.xml` |
+
+Dazu kommt `fx:DocumentType` = `INVOICE` und `fx:DocumentFileName` passend zum
+Dateinamen.
+
+> **Der Dateiname ist profilabhängig und normativ.** ZUGFeRD 2.5.2 § 7.7
+> schreibt für das Referenzprofil XRECHNUNG `xrechnung.xml` vor und verbietet
+> ausdrücklich, unter diesem Profil eine `factur-x.xml` einzubetten. Eine
+> Hybrid-Rechnung ist bereits am falschen Dateinamen nicht konform.
+
+Die Dokument-Metadaten (`/Subject`) tragen **bewusst keine Formatangabe**. Ein
+Format-Label gehört nur dorthin, wo die Struktur es auch trägt; prüfende
+Empfänger lesen ohnehin die PDF/A-3-Hülle und die `fx:*`-XMP-Einträge, nicht
+das DocInfo-Feld.
+
+Inhaltlich gelten für die eingebettete XML dieselben Regeln wie für die
+XRechnung (siehe oben).
 
 ### Peppol / UBL
 

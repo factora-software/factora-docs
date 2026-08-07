@@ -4,6 +4,20 @@ Alle Pfade relativ zur Basis-URL `https://console.factora.software/api/v1`.
 Authentifizierung, Antwort-Hülle und Fehlercodes siehe
 [API-Überblick](api-overview.md).
 
+## Schema & interaktive Referenz
+
+Die API ist vollständig per **OpenAPI 3.1** beschrieben (Titel „Factora API",
+Version 1.0.0). Bei Abweichungen zwischen Prosa und Schema ist das **Schema
+maßgeblich**.
+
+| Ressource | Pfad | Zugriff |
+|---|---|---|
+| OpenAPI-Schema (3.1) | `GET /api/schema/` | öffentlich |
+| Swagger-UI | `GET /api/docs/` | öffentlich |
+| ReDoc | `GET /api/redoc/` | öffentlich |
+| Scalar-Referenz | `https://console.factora.software/docs` | öffentlich |
+| Vollschema | `GET /api/schema/full/` · `GET /api/docs/full/` | authentifiziert |
+
 ## Vollständige Endpunktliste
 
 | Methode | Pfad | Zweck | Scope | Sandbox |

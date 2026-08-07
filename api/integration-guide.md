@@ -12,8 +12,8 @@ Der empfohlene Weg ist der **atomic-Endpoint**: ein einziger Request erstellt, v
 
 - Jeder Request trägt den Header `Authorization: Bearer fa_…`.
 - Der Schlüssel (Prefix `fa_`) wird **einmalig bei der Erstellung** angezeigt; Factora speichert nur einen Hash. Geht er verloren, wird ein neuer erzeugt.
-- Optional pro Schlüssel konfigurierbar: **IP-Whitelist**, **Scopes** (Lese-/Schreibrechte) und **Ablaufdatum**.
-- Bezug des Schlüssels: über das Integrator-Dashboard (Self-Service) oder durch Factora bereitgestellt. Voraussetzung ist ein API-Tarif (Starter oder Pro).
+- Optional pro Schlüssel konfigurierbar: **IP-Whitelist** (einzelne IP-Adressen, keine CIDR-Bereiche), **Scopes** (Lese-/Schreibrechte) und **Ablaufdatum**.
+- Bezug des Schlüssels: über die Console (Self-Service) oder durch Factora bereitgestellt. Voraussetzung ist der API-Tarif.
 
 > Der API-Schlüssel ist ein Vollzugriff auf das Konto. Niemals in Repos, Logs oder Client-Code ablegen; serverseitig speichern und die IP-Whitelist nutzen.
 
@@ -127,11 +127,12 @@ Pro API-Schlüssel lassen sich **Standardwerte** hinterlegen, die automatisch in
 
 # 9. Limits & Tarife
 
-- **Starter**: 1.000 API-Aufrufe pro Tag, 1 Mandant.
-- **Pro**: 10.000 Aufrufe pro Tag, mehrere Mandanten.
-- **14 Tage** kostenloser Test (synthetische Aufrufe).
-- Tageskontingent wird pro Schlüssel gezählt; Überschreitung → `429` (ebenso ein kurzfristiges Limit pro Minute).
-- Davon zu unterscheiden: `402` = Plan-/Rechnungslimit des Tarifs erschöpft — kein Rate-Limit, sondern ein Upgrade ist nötig.
+- Es gibt **einen** nutzungsbasierten API-Tarif; abgerechnet wird pro finalisierter Rechnung über die Console.
+- **Tageslimit: 50.000 Aufrufe / 24 h** pro Schlüssel — ein Anti-Missbrauchs-Schutz, keine Preisstufe. Überschreitung → `429` mit `Retry-After`.
+- **Bis zu 20 Schlüssel** je Konto; die Last lässt sich darüber verteilen.
+- Sandbox-Aufrufe zählen nicht auf das Tageslimit.
+- Die monatliche Dokument-Quota ist im API-Tarif **unbegrenzt** und wird nur informativ mitgeliefert (`meta.quota` sowie die Header `X-Factora-Documents-Used` / `X-Factora-Documents-Limit`) — sie blockt einen Request nie.
+- Davon zu unterscheiden: `402` = harte Rechnungs-Obergrenze; die greift ausschließlich im Free-Tarif, nicht im API-Tarif.
 
 # 10. Fehlercodes
 
@@ -140,7 +141,7 @@ Pro API-Schlüssel lassen sich **Standardwerte** hinterlegen, die automatisch in
 | 201 | Rechnung erstellt (atomic) — XML + PDF im Body. |
 | 400 | Ungültiger Body, ungültiges JSON, fehlender/ungültiger Idempotency-Key oder Validierungsfehler (z. B. Summen weichen ab). |
 | 401 | Authentifizierung fehlgeschlagen (Schlüssel fehlt/ungültig /abgelaufen, IP nicht erlaubt). |
-| 402 | Plan-/Rechnungslimit erreicht (z. B. Free-Tier-Rechnungskontingent) — Upgrade erforderlich, kein Rate-Limit. |
+| 402 | Harte Rechnungs-Obergrenze erreicht (nur Free-Tarif) — Upgrade erforderlich, kein Rate-Limit. |
 | 403 | Kein API-Zugang (Tarif) oder fehlender Scope. |
 | 409 | Rechnungsnummer existiert bereits. |
-| 429 | Rate-Limit überschritten: kurzfristig (Requests/Minute) oder Tages-API-Kontingent (Starter 1.000 / Pro 10.000). |
+| 429 | Tageskontingent des Schlüssels erschöpft (50.000 Aufrufe / 24 h) — Antwort trägt `Retry-After`. |

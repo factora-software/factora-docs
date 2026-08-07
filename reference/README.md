@@ -34,6 +34,10 @@ Es gibt zwei Wege, Factora zu nutzen:
   Schlussrechnung, Gutschrift/Self-Billing).
 - [Rechnungsformate](formats.md) — XRechnung (CII), ZUGFeRD (PDF/A-3),
   Peppol/UBL; Profile, Prüfung und amtliche Abnahme (KoSIT).
+- [Peppol BIS 3.0 & EAS-Codes](peppol.md) — Customization-/Profile-Kennungen,
+  Gutschriftverfahren (389), EAS-Codes der Teilnehmer-Endpunkte.
+- [Validierung](validation.md) — XSD und Schematron, geprüfte Regelsätze,
+  Aufbau eines Befunds.
 - [Steuerlogik](tax-logic.md) — alle USt-Kategorien, Steuersätze,
   Befreiungsgründe, §13b Reverse Charge, innergemeinschaftliche Lieferung,
   Ausfuhr, §19 Kleinunternehmer, grenzüberschreitende Logik, Prüfregeln.
@@ -42,9 +46,13 @@ Es gibt zwei Wege, Factora zu nutzen:
 
 ### Öffentliche API
 
+- [Schnellstart](../api/quickstart.md) — vom leeren Account zum ersten
+  authentifizierten Aufruf.
 - [API-Überblick](api-overview.md) — Basis-URL, Authentifizierung,
   API-Schlüssel, Sandbox/Live, Idempotenz, Limits, Antwort-Hülle,
   Fehlercodes, Scopes.
+- [Sandbox & Testing](sandbox.md) — kostenlose Trockenläufe, zugelassene
+  Endpunkte, Verhalten des Dry-Runs.
 - [Endpoints](api-endpoints.md) — vollständige Liste aller Endpunkte mit
   Methode, Zweck, erforderlichem Scope und Verhalten.
 - [Atomic Invoice — vollständiges Feldschema](atomic-invoice.md) — jedes Feld

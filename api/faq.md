@@ -69,14 +69,30 @@ neuen Key erstellen. Der gelöschte Key wird sofort serverseitig invalidiert.
 
 ### Kann ich einen Key auf bestimmte IPs beschränken?
 
-Ja, beim Anlegen des Keys eine IP-Whitelist setzen (CIDR oder
-Einzel-IPs). Requests von anderen IPs erhalten HTTP 401.
+Ja, beim Anlegen des Keys eine IP-Whitelist setzen. Erlaubt sind
+ausschließlich **einzelne IP-Adressen** — CIDR-Bereiche werden bewusst
+abgelehnt, weil die Prüfung serverseitig auf exakte Übereinstimmung geht.
+Leere Liste = alle IPs erlaubt. Requests von anderen IPs erhalten HTTP 401.
 
 ### Welche Scopes gibt es?
 
-Aktuell drei: `invoices.read`, `invoices.write`, `customers.read`.
-Default beim Anlegen ist `invoices.write` — passt für die meisten
-ERP-Integrationen.
+Neun, jeweils mit Doppelpunkt geschrieben:
+
+| Scope | Bedeutung |
+|---|---|
+| `invoices:read` | Rechnungen lesen, PDF/XML herunterladen |
+| `invoices:write` | Rechnungen erstellen, finalisieren, versenden |
+| `customers:read` | Kunden lesen |
+| `customers:write` | Kunden anlegen |
+| `mandanten:read` | Mandanten lesen |
+| `mandanten:write` | Mandanten anlegen/ändern/löschen |
+| `exports:read` | DATEV-Export herunterladen |
+| `webhooks:read` | Webhooks und Zustellungen lesen |
+| `webhooks:write` | Webhooks verwalten, Test senden |
+
+Eine **leere** Scope-Liste bedeutet: alle Rechte. Die Prüfung ist
+methodenbasiert — `GET` verlangt den `…:read`-Scope, `POST`/`PATCH`/
+`DELETE` den `…:write`-Scope.
 
 ## Endpoints
 
@@ -122,11 +138,15 @@ Rechnungen Step-by-Step nutzen.
 
 ### Was passiert bei HTTP 429?
 
-Tageskontingent erschöpft. Der Response enthält:
+Tageskontingent erschöpft (**50.000 Aufrufe / 24 h** im API-Tarif — ein
+Anti-Missbrauchs-Schutz, keine Preisstufe). Der Response enthält:
 - Header `Retry-After: <sekunden>` (Sekunden bis Reset)
 - Body mit `errors[0].code = "rate_limited"`
 
-Reset: Mitternacht UTC. Daily-Quota gilt pro Key, nicht pro Tenant.
+Das Fenster ist **gleitend über 24 Stunden**, kein Reset zu einer festen
+Uhrzeit — `Retry-After` abwarten. Das Kontingent gilt pro Key, nicht pro
+Tenant; je Konto sind bis zu 20 Keys möglich, die Last lässt sich also
+verteilen. Sandbox-Aufrufe zählen nicht mit.
 
 ### Was bedeutet HTTP 402?
 
