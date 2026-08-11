@@ -61,8 +61,10 @@ Auftraggeber.
 
 > **Hinweis zum Reifegrad:** Im XRechnung/CII-Pfad ist der TypeCode 389
 > erzeugbar und amtlich (KoSIT) geprüft. Im internationalen Peppol/UBL-Pfad
-> wird das eigenständige **Peppol-Self-Billing-Profil** erzeugt; dessen
-> amtliche Abnahme über einen Peppol-Self-Billing-Validator steht noch aus
+> wird das eigenständige **Peppol-Self-Billing-Profil** (BIS Self-Billing 3.0)
+> erzeugt und gegen das offizielle OpenPeppol-Schematron validiert; die
+> Prüfszenarien dafür pflegt Factora selbst, da weder KoSIT noch OpenPeppol
+> eine fertige Validator-Konfiguration für Self-Billing ausliefert
 > (siehe [Rechnungsformate](formats.md)).
 
 ## Abgrenzung: Begriff „Gutschrift"

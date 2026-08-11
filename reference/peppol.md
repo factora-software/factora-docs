@@ -32,10 +32,11 @@ das **Peppol-BIS-Self-Billing-3.0-Profil**:
 
 Das ist nötig, weil das Standard-Billing-Profil den TypeCode 389 ablehnt.
 
-> **Zum Abnahmestatus:** Der **UBL**-Self-Billing-Pfad (389) ist bislang nicht
-> amtlich abgenommen — das korrekte Profil wird erzeugt, die Prüfung über einen
-> Peppol-Self-Billing-Validator steht aus. Der CII-Pfad (XRechnung) ist
-> KoSIT-geprüft. Siehe die Übersicht unter
+> **Zum Abnahmestatus:** Der **UBL**-Self-Billing-Pfad (389) wird gegen das
+> offizielle OpenPeppol-Schematron *Peppol BIS Self-Billing 3.0.1* validiert;
+> die Prüfszenarien dafür pflegt Factora selbst, da weder KoSIT noch OpenPeppol
+> eine fertige Validator-Konfiguration für Self-Billing ausliefert. Der
+> CII-Pfad (XRechnung) ist KoSIT-geprüft. Siehe die Übersicht unter
 > [Rechnungsformate](formats.md#validierung--amtliche-prüfung-kosit).
 
 ## InvoiceTypeCodes
