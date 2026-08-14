@@ -16,22 +16,36 @@ Nach Bestätigung der E-Mail landest du direkt im Integrator-Dashboard.
 
 ### Was ist der Tech-Kontakt?
 
-Die E-Mail-Adresse, an die Onboarding-Mail, Trial-Erinnerungen (T-7 / T-1)
-und perspektivisch API-Statusmeldungen gehen. Aktuell identisch mit dem
-Login der Owner-Rolle.
+Die E-Mail-Adresse, an die die Onboarding-Mail und perspektivisch
+API-Statusmeldungen gehen. Aktuell identisch mit dem Login der
+Owner-Rolle.
 
-### Brauche ich eine Kreditkarte für den Trial?
+### Brauche ich eine Kreditkarte zum Ausprobieren?
 
-Nein. Der 14-Tage-Trial läuft ohne Zahlungsmittel. Erst beim Wechsel auf
-einen kostenpflichtigen Tarif (Stripe-Checkout) wird ein Zahlungsmittel
-hinterlegt.
+Nein — und es gibt auch keine Frist. Es existiert **kein zeitlich
+begrenzter Trial**. Nach der Registrierung stehen sofort **Sandbox-Keys**
+(`fa_test_…`) bereit, die **dauerhaft kostenlos** sind: `POST
+/api/v1/invoices/atomic/` läuft damit als Dry-Run durch dieselbe Pipeline
+(Validierung, PDF + XML), persistiert aber nichts (`sandbox: true`).
 
-### Was passiert nach Ablauf des Trials?
+Ein Zahlungsmittel wird erst für den **Live-Betrieb** hinterlegt
+(Console → Abrechnung). Damit wird die metered Stripe-Subscription aktiv
+und Live-Keys (`fa_live_…`) lassen sich erzeugen.
 
-Ohne Buchung wird der Tenant auf `paused` gesetzt:
+### Was gilt, solange keine Zahlungsmethode hinterlegt ist?
+
+Der Tenant steht auf `pending_card`:
 - Daten und Keys bleiben erhalten
-- API-Zugriff wird gesperrt (HTTP 402 / 403)
-- Reaktivierung jederzeit über Stripe-Checkout im Settings/Abo-Tab
+- Sandbox-Keys funktionieren unverändert und kostenlos
+- Über Live-Keys sind nur lesende Aufrufe (GET / HEAD / OPTIONS) sowie
+  `POST /api/v1/invoices/convert/` (persistiert nichts) erreichbar;
+  jeder andere schreibende Aufruf wird abgelehnt
+- Freischaltung jederzeit über den Stripe-Checkout im Abrechnungs-Tab
+
+Dasselbe Verhalten greift bei `paused` — das ist ein **kostenpflichtiges
+Abo mit fehlgeschlagener Zahlung**, nicht ein abgelaufener Testzeitraum.
+Finalisierte Rechnungen bleiben in jedem dieser Zustände abrufbar (GoBD:
+10 Jahre Aufbewahrung).
 
 ### Was kostet die API?
 
@@ -150,8 +164,11 @@ verteilen. Sandbox-Aufrufe zählen nicht mit.
 
 ### Was bedeutet HTTP 402?
 
-`Payment Required` — Trial abgelaufen oder Subscription paused. Owner
-muss im Settings/Abo-Tab einen Tarif buchen oder reaktivieren.
+`Payment Required` — die Subscription ist nicht aktiv
+(`pending_card`, `paused`, `expired`, `canceled` oder `past_due`).
+Lesende Aufrufe und `/convert/` bleiben erreichbar, schreibende nicht.
+Der Owner hinterlegt im Abrechnungs-Tab eine Zahlungsmethode bzw.
+reaktiviert das Abo über den Stripe-Checkout.
 
 ### Welche Felder kommen bei einem Validation-Error zurück?
 
