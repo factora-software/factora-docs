@@ -35,13 +35,13 @@ Konventionen: Beträge sind Dezimal-Strings (2 Nachkommastellen), Mengen
 | `invoice_number` | string(50) | ja | — | BT-1 | Rechnungsnummer |
 | `invoice_type` | string(10) | nein | `"380"` | BT-3 | 380 Rechnung, 384 Korrektur, 386 Abschlag, 389 Gutschrift/Self-Billing |
 | `invoice_date` | date | ja | — | BT-2 | Rechnungsdatum |
-| `delivery_date` | date | nein | — | BT-9 | Liefer-/Leistungsdatum |
+| `delivery_date` | date | nein | — | BT-72 | Liefer-/Leistungsdatum (erscheint im PDF als „Lieferdatum") |
 | `billing_start_date` | date | nein | — | BT-73 | Abrechnungszeitraum Beginn |
 | `billing_end_date` | date | nein | — | BT-74 | Ende (≥ Beginn) |
 | `currency` | string(3) | nein | `"EUR"` | BT-5 | ISO 4217 |
 | `order_reference` | string | nein | `""` | BT-13 | Bestellnummer |
 | `buyer_reference` | string | nein | `""` | BT-10 | Käufer-Referenz (Leitweg-ID bei B2G) |
-| `payment_due_date` | date | nein | — | — | Fälligkeitsdatum |
+| `payment_due_date` | date | nein | — | BT-9 | Fälligkeitsdatum |
 | `payment_terms` | string | nein | `""` | BT-20 | Zahlungsbedingungen (Freitext) |
 | `payment_means_code` | string(4) | nein | `"58"` | BT-81 | UNCL 4461 (30 Überweisung, 58 SEPA, 49 Lastschrift …) |
 | `prepaid_amount` | decimal | nein | — | BT-113 | Bereits gezahlter Betrag (≤ Brutto); BT-115 = Brutto − BT-113 |
