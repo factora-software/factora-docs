@@ -173,10 +173,33 @@ zu Pflichtangaben.
 | `gln` | string | nein | `""` | BT-44 | GLN (13 Stellen, GS1-Prüfziffer) |
 | `identifier` | string(64) | nein | `""` | BT-46 | weitere Käuferkennung |
 | `debitor_number` | string(20) | nein | `""` | — | DATEV-Debitorennummer (nur Export, nicht im XML) |
+| `customer_number` | string(50) | nein | `""` | — | Ihre eigene Kundennummer (siehe unten; nur PDF, nicht im XML) |
 | `branch_id` | string | nein | `""` | — | Filial-/Standortkennung |
 | `trading_name` | string(255) | nein | `""` | BT-45 | Handelsname |
 | `legal_registration_id` | string(64) | nein | `""` | BT-47 | Handelsregisternummer |
 | `contact` | Objekt | nein | — | BG-9 | Ansprechpartner (wie oben) |
+
+### Kundennummer — `buyer.customer_number`
+
+Die Nummer, unter der der Käufer in **Ihrem** System geführt wird. Sie
+erscheint auf dem PDF als „Kundennummer" und steht nicht im XML (EN 16931
+kennt dafür kein Feld — für eine Käuferkennung im XML nutzen Sie `gln`
+(BT-44) oder `identifier` (BT-46)).
+
+Die Nummer ist zugleich die **Identität des Kunden**: Rechnungen mit
+derselben Kundennummer landen auf demselben Kundendatensatz, auch wenn
+sich der Firmenname zwischenzeitlich geändert hat. Umgekehrt gilt: ändern
+Sie die Nummer eines bestehenden Kunden, übernehmen wir das — bereits
+ausgestellte Rechnungen behalten die Nummer, die zum Zeitpunkt der
+Ausstellung galt.
+
+Eindeutig ist sie **je Mandant**: zwei Mandanten dürfen dieselbe Nummer
+vergeben, innerhalb eines Mandanten bezeichnet sie genau einen Kunden.
+
+Lassen Sie das Feld weg, vergibt Factora weiterhin selbst eine Nummer aus
+dem Firmennamen (`API-…`). Schicken Sie die Nummer für einen Käufer, den
+wir bereits unter einer solchen `API-…`-Nummer führen, ersetzt Ihre Nummer
+die generierte — es entsteht kein zweiter Datensatz.
 
 ## Lieferadresse — `shipping` (BG-13/15)
 
