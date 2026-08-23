@@ -82,7 +82,31 @@ Konventionen: Beträge sind Dezimal-Strings (2 Nachkommastellen), Mengen
 | `gross_amount` | decimal | ja | Brutto (Netto + USt) |
 
 Der Server berechnet die Summen aus den Positionen neu und vergleicht sie
-mit diesen Werten; eine Abweichung führt zu HTTP 400.
+mit diesen Werten. **Toleranz: 0,02 € je Feld** (netto, USt., brutto), absolut
+gerechnet. Darüber wird die Anfrage mit **HTTP 400** abgelehnt; die Meldung
+nennt den berechneten und den gesendeten Wert.
+
+Innerhalb der Toleranz wird der Beleg angenommen, und es gelten die **vom
+Server berechneten** Summen — nicht die gesendeten. Weichen beide voneinander
+ab, weist die Antwort das in `meta.totals_adjusted` aus, damit die Differenz
+nachvollziehbar dokumentiert werden kann:
+
+```json
+"meta": {
+  "totals_adjusted": {
+    "tolerance": "0.02",
+    "fields": {
+      "vat_amount":   { "sent": "0.47", "used": "0.48", "delta": "0.01" },
+      "gross_amount": { "sent": "2.97", "used": "2.98", "delta": "0.01" }
+    }
+  }
+}
+```
+
+`delta` ist `used - sent`. Stimmen die Summen auf den Cent überein, fehlt der
+Schlüssel `totals_adjusted` ganz. Der häufigste Grund für eine Differenz ist
+eine andere Rundungsregel im Quellsystem: Factora rundet kaufmännisch je
+Position auf zwei Nachkommastellen und summiert danach.
 
 ## Verkäufer — `seller_snapshot`
 

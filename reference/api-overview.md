@@ -187,6 +187,12 @@ Das **Fehlerobjekt** enthält `code`, `severity` und `message` immer, die
 (EN-16931-/Geschäftsregel), `bt` (Geschäftsbegriff) und `location` (XPath bei
 XML-Befunden).
 
+**Validierungsbefunde** (`code: "kosit"` oder `"business"`) führen `rule`, `bt`
+und `location` **immer** — `null`, wenn der Prüfbericht sie nicht benennt (etwa
+bei reinen Schema-Fehlern). Ein Client kann diese Schlüssel dort also ohne
+Existenzprüfung auslesen. Bei allen anderen Fehlerarten (Authentifizierung,
+Kontingent, Schema-Validierung der Eingabe) fehlen sie weiterhin ganz.
+
 > Bei **5xx** greift die Hülle nicht — das ist ein unerwarteter Serverfehler.
 > Bitte mit Request-Details an den Support melden.
 

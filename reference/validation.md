@@ -50,7 +50,9 @@ strukturierte Befundliste. Jeder Befund enthält:
 | `test` | zugrunde liegender Schematron-Test |
 
 In der API-Antwort erscheinen KoSIT-Befunde mit dem Fehler-Code `kosit` und
-liefern `rule`, `bt` und `location` mit — siehe
+liefern `rule`, `bt` und `location` **immer** mit — `null`, wenn der
+Prüfbericht sie nicht benennt. Diese Schlüssel sind bei Befunden also stets
+vorhanden und müssen nicht auf Existenz geprüft werden; siehe
 [API-Überblick](api-overview.md#fehler--und-antwortstruktur).
 
 Beispiel — Befund bei fehlender Bestellreferenz (gekürzt):
