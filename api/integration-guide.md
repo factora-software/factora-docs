@@ -27,15 +27,20 @@ Der empfohlene Weg ist der **atomic-Endpoint**: ein einziger Request erstellt, v
 
 Pflicht-Header: `Authorization`, `Content-Type: application/json` und `Idempotency-Key` (siehe Abschnitt 5).
 
-**Request**
+**Request** — Kopfzeilen:
 
 ```
 POST /api/v1/invoices/atomic/
-Authorization: Bearer fa_****************
+Authorization: Bearer fa_live_****************
 Content-Type: application/json
 Idempotency-Key: 7e0e8a2c-3b1d-4f6a-9c2e-1a2b3c4d5e6f
+```
 
+Und der Rumpf. Er ist **vollständig**: unter dem Standardprofil `xrechnung` fehlt hier kein Pflichtfeld, er lässt sich also kopieren und absenden.
+
+```json
 {
+  "api_mode": "atomic_single_post",
   "invoice_header": {
     "invoice_number": "RE-2026-0001",
     "invoice_date": "2026-05-22",
@@ -45,21 +50,39 @@ Idempotency-Key: 7e0e8a2c-3b1d-4f6a-9c2e-1a2b3c4d5e6f
     "profile": "xrechnung"
   },
   "seller_snapshot": {
-    "name": "Muster GmbH", "street": "Hauptstr. 1",
-    "zip": "10115", "city": "Berlin", "vat_id": "DE123456789",
-    "iban": "DE21500500009876543210"
+    "name": "Muster GmbH",
+    "street": "Hauptstr. 1",
+    "zip": "10115",
+    "city": "Berlin",
+    "vat_id": "DE123456789",
+    "iban": "DE21500500009876543210",
+    "contact": {
+      "name": "E. Musterfrau",
+      "phone": "+49 30 1234567",
+      "email": "rechnung@muster.example"
+    }
   },
   "buyer": {
-    "name": "Beispiel AG", "street": "Bahnhofstr. 2",
-    "zip": "60486", "city": "Frankfurt am Main", "country": "DE",
+    "name": "Beispiel AG",
+    "street": "Bahnhofstr. 2",
+    "zip": "60486",
+    "city": "Frankfurt am Main",
+    "country": "DE",
     "contact": { "email": "einkauf@beispiel.example" }
   },
   "items": [
-    { "description": "Beratungsleistung", "quantity": "1",
-      "unit": "C62", "unit_price_net": "100.00", "vat_rate": "19" }
+    {
+      "description": "Beratungsleistung",
+      "quantity": "1.000",
+      "unit": "C62",
+      "unit_price_net": "100.00",
+      "vat_rate": "19.00"
+    }
   ],
   "validation_totals": {
-    "net_amount": "100.00", "vat_amount": "19.00", "gross_amount": "119.00"
+    "net_amount": "100.00",
+    "vat_amount": "19.00",
+    "gross_amount": "119.00"
   }
 }
 ```
@@ -67,18 +90,57 @@ Idempotency-Key: 7e0e8a2c-3b1d-4f6a-9c2e-1a2b3c4d5e6f
 **Response**
 
 ```
-201 Created
+HTTP/1.1 201 Created
+```
 
+```json
 {
-  "id": 123,
-  "invoice_number": "RE-2026-0001",
-  "status": "final",
-  "profile": "xrechnung",
-  "total": "119.00",
-  "pdf_base64": "JVBERi0xLjQ...",   ZUGFeRD-PDF (PDF/A-3)
-  "xml_base64": "PD94bWwg..."        XRechnung (CII)
+  "valid": true,
+  "data": {
+    "id": 123,
+    "invoice_number": "RE-2026-0001",
+    "status": "final",
+    "profile": "xrechnung",
+    "total": "119.00",
+    "pdf_base64": "JVBERi0xLjQ...",
+    "xml_base64": "PD94bWwg..."
+  },
+  "errors": [],
+  "meta": {}
 }
 ```
+
+Jede Antwort der API trägt dieselbe Hülle: `valid`, `data`, `errors`, `meta`. Die Nutzdaten liegen **immer** unter `data`, auch bei Erfolg — nie auf oberster Ebene.
+
+**Und der häufigste Fehlschlag.** Derselbe Request ohne `seller_snapshot.contact` wird unter `xrechnung` abgelehnt: BT-42 und BT-43 sind dort Pflicht (BR-DE-6/7). Das ist der Fehler, der in Produktion am häufigsten auftrat.
+
+```
+HTTP/1.1 400 Bad Request
+```
+
+```json
+{
+  "valid": false,
+  "data": null,
+  "errors": [
+    {
+      "code": "schema",
+      "severity": "error",
+      "message": "Dieses Feld ist für das Profil XRechnung erforderlich.",
+      "field": "seller_snapshot.contact.phone"
+    },
+    {
+      "code": "schema",
+      "severity": "error",
+      "message": "Dieses Feld ist für das Profil XRechnung erforderlich.",
+      "field": "seller_snapshot.contact.email"
+    }
+  ],
+  "meta": {}
+}
+```
+
+Welche Felder das Profil hochzieht, steht vollständig unter *Profilabhängige Pflichtfelder* in der Feld-Referenz (`docs/reference/atomic-invoice.md`).
 
 Die wichtigsten Bausteine des Request-Bodys:
 

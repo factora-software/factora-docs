@@ -10,37 +10,113 @@ Format und EN-16931-Bezug (BT-Codes).
 Konventionen: Beträge sind Dezimal-Strings (2 Nachkommastellen), Mengen
 3 Stellen, Sätze 2 Stellen; Datumsangaben ISO 8601 (`YYYY-MM-DD`).
 
+**Die Pflicht-Spalte hat vier Werte**, und einer davon hängt am Profil:
+
+| Wert | Bedeutung |
+|---|---|
+| `ja` | fehlt das Feld, kommt ein `400` — unabhängig vom Profil |
+| `ja (xrechnung)` | Pflicht nur unter dem **Standardprofil** `xrechnung`; unter `en16931` optional |
+| `bedingt` | hängt von einer anderen Angabe ab; die Regel steht unter der Tabelle |
+| `nein` | optional, oder es greift der Default aus der Default-Spalte |
+
+„Pflicht" heißt hier immer: **lasse ich es weg, wird der Request abgelehnt.**
+Nicht: „die Norm führt es als Muss". Der Unterschied ist praktisch relevant —
+`country` etwa ist in beiden Profilen ein Muss-Feld der Norm, trägt bei uns
+aber den Default `"DE"` und fehlt deshalb nie. In der Tabelle steht `nein`.
+
+Die Spalten `Pflicht` und `BT` werden von
+[`scripts/check_docs_required_fields.py`](../../scripts/check_docs_required_fields.py)
+gegen den Serializer und das EN-16931-Register geprüft. Weicht eine Zelle ab,
+schlägt der Lauf fehl. Bitte nichts von Hand „korrigieren", ohne das Skript
+laufen zu lassen.
+
 ## Aufbau des Payloads
 
+<!-- felder:  -->
 | Feld | Typ | Pflicht | Default | Bemerkung |
 |---|---|---|---|---|
 | `api_mode` | string | ja | — | muss `"atomic_single_post"` sein |
 | `invoice_header` | Objekt | ja | — | Rechnungskopf (s. u.) |
 | `validation_totals` | Objekt | ja | — | Kontrollsummen aus dem Quellsystem |
-| `seller_snapshot` | Objekt | bedingt* | — | Verkäufer-Stammdaten |
-| `mandant_id` | integer | bedingt* | — | alternativ: Mandant referenzieren |
+| `seller_snapshot` | Objekt | bedingt | — | Verkäufer-Stammdaten |
+| `mandant_id` | integer | bedingt | — | alternativ: Mandant referenzieren |
 | `buyer` | Objekt | ja | — | Käufer/Empfänger |
 | `shipping` | Objekt | nein | — | abweichende Lieferadresse |
 | `items` | Array | ja | — | min. 1 Position |
 | `attachments` | Array | nein | `[]` | bis 10 Anhänge, max. 15 MB gesamt |
 | `extended_fields` | Objekt | nein | `{}` | optionale EN-16931-Zusatzfelder |
 
-\* **Genau eines** von `seller_snapshot` oder `mandant_id` ist anzugeben. Bei
-`mandant_id` werden die Verkäuferdaten automatisch aus dem Mandanten gesetzt.
+`bedingt` heißt hier: **genau eines** von `seller_snapshot` oder `mandant_id`
+ist anzugeben — beide oder keines wird abgelehnt. Bei `mandant_id` werden die
+Verkäuferdaten automatisch aus dem Mandanten gesetzt und dort erneut geprüft;
+die Pflichtfelder aus dem Abschnitt *Verkäufer* gelten dann für die
+Stammdaten des Mandanten.
+
+## Profilabhängige Pflichtfelder
+
+`invoice_header.profile` entscheidet, **welche Felder Pflicht sind**. Wird das
+Feld weggelassen, gilt `xrechnung` — der deutsche CIUS mit den nationalen
+BR-DE-Regeln. Unter `en16931` gilt nur das europäische Kernmodell, und sieben
+Felder fallen weg.
+
+Das ist der häufigste Grund für einen abgelehnten ersten Request: Der Aufrufer
+liest „nein" in einer Spalte, die für das andere Profil gilt.
+
+**Nur unter `xrechnung` Pflicht (7 Felder):**
+
+| BT | Feld im Payload | Warum |
+|---|---|---|
+| BT-10 | `invoice_header.buyer_reference` | BR-DE-15; bei B2G steht hier die Leitweg-ID |
+| BT-37 | `seller_snapshot.city` | BR-DE-4 |
+| BT-38 | `seller_snapshot.zip` | BR-DE-3 |
+| BT-42 | `seller_snapshot.contact.phone` | BR-DE-6 |
+| BT-43 | `seller_snapshot.contact.email` | BR-DE-7 |
+| BT-52 | `buyer.city` | BR-DE-9 |
+| BT-53 | `buyer.zip` | BR-DE-8 |
+
+`seller_snapshot.contact` als Ganzes ist damit unter `xrechnung` ebenfalls
+Pflicht — wer das Objekt weglässt, lässt BT-42 und BT-43 mit weg.
+
+**Zusätzlich unter `xrechnung`: die elektronische Adresse des Käufers (BT-49).**
+Sie hat zwei Träger, einer genügt: entweder eine **deutsche** USt-IdNr. in
+`buyer.vat_id` oder eine `buyer.contact.email`. Fehlen beide, lautet die
+Antwort:
+
+```json
+{ "field": "buyer.contact.email",
+  "message": "Käufer ohne elektronische Adresse (BT-49, BR-63): entweder eine deutsche USt-IdNr. in 'vat_id' oder eine 'contact.email' angeben. Pflicht nur unter Profil 'xrechnung'." }
+```
+
+**In beiden Profilen Pflicht** sind Rechnungsnummer und -datum (BT-1/BT-2),
+Verkäufer- und Käufername (BT-27/BT-44), die Kontrollsummen und mindestens
+eine Position mit Bezeichnung, Menge, Einheit, Nettopreis und Steuersatz.
+
+**Nicht in dieser Liste, obwohl die Norm sie fordert:** `invoice_type` (BT-3),
+`currency` (BT-5), `payment_means_code` (BT-81) und beide `country`-Felder
+(BT-40/BT-55). Sie tragen Defaults (`"380"`, `"EUR"`, `"58"`, `"DE"`) und
+fehlen deshalb nie. Und BT-41 (Ansprechpartner-Name) verlangen wir nicht: der
+Writer setzt dort den Verkäufernamen ein, wenn nichts kommt — KoSIT-geprüft in
+`test_seller_contact_name_is_covered_by_the_writer_fallback`.
+
+Wer bewusst ohne die deutschen Zusatzregeln arbeiten will, setzt
+`"profile": "en16931"` im `invoice_header`. Das Ausgabeformat ändert sich
+dadurch nicht; das aufgelöste Profil steht immer in der Antwort.
 
 ## Rechnungskopf — `invoice_header`
 
+<!-- felder: invoice_header -->
 | Feld | Typ | Pflicht | Default | BT | Bemerkung |
 |---|---|---|---|---|---|
 | `invoice_number` | string(50) | ja | — | BT-1 | Rechnungsnummer |
 | `invoice_type` | string(10) | nein | `"380"` | BT-3 | 380 Rechnung, 384 Korrektur, 386 Abschlag, 389 Gutschrift/Self-Billing |
+| `profile` | string | nein | `"xrechnung"` | — | **entscheidet die Pflichtmenge** — `xrechnung` (deutscher CIUS inkl. BR-DE) oder `en16931` (europäisches Kernmodell); siehe [Profilabhängige Pflichtfelder](#profilabhängige-pflichtfelder) |
 | `invoice_date` | date | ja | — | BT-2 | Rechnungsdatum |
 | `delivery_date` | date | nein | — | BT-72 | Liefer-/Leistungsdatum (erscheint im PDF als „Lieferdatum") |
 | `billing_start_date` | date | nein | — | BT-73 | Abrechnungszeitraum Beginn |
 | `billing_end_date` | date | nein | — | BT-74 | Ende (≥ Beginn) |
 | `currency` | string(3) | nein | `"EUR"` | BT-5 | ISO 4217 |
 | `order_reference` | string | nein | `""` | BT-13 | Bestellnummer |
-| `buyer_reference` | string | nein | `""` | BT-10 | Käufer-Referenz (Leitweg-ID bei B2G) |
+| `buyer_reference` | string | ja (xrechnung) | `""` | BT-10 | Käufer-Referenz (Leitweg-ID bei B2G) |
 | `payment_due_date` | date | nein | — | BT-9 | Fälligkeitsdatum |
 | `payment_terms` | string | nein | `""` | BT-20 | Zahlungsbedingungen (Freitext) |
 | `payment_means_code` | string(4) | nein | `"58"` | BT-81 | UNCL 4461 (30 Überweisung, 58 SEPA, 49 Lastschrift …) |
@@ -68,13 +144,14 @@ Konventionen: Beträge sind Dezimal-Strings (2 Nachkommastellen), Mengen
 | `mandate_reference` | string(64) | nein | `""` | BT-89 | SEPA-Mandatsreferenz |
 | `creditor_reference` | string(64) | nein | `""` | BT-90 | Gläubiger-ID |
 | `debited_account` | string(34) | nein | `""` | BT-91 | IBAN des belasteten Kontos |
-| `parent_invoice` | integer | nein | — | BG-3 | Bezugsrechnung (Korrektur/Gutschrift, BT-25/26) |
+| `parent_invoice` | integer | nein | — | BT-25 | Bezugsrechnung (Korrektur/Gutschrift, BT-25/26) |
 | `vat_accounting_currency` | string(3) | nein | `""` | BT-6 | abweichende USt-Währung |
 | `tax_amount_accounting` | decimal | nein | — | BT-111 | USt in Buchungswährung (Pflicht, wenn BT-6 gesetzt) |
 | `rounding_amount` | decimal | nein | — | BT-114 | Rundungsbetrag |
 
 ## Kontrollsummen — `validation_totals`
 
+<!-- felder: validation_totals -->
 | Feld | Typ | Pflicht | Bemerkung |
 |---|---|---|---|
 | `net_amount` | decimal | ja | Summe der Netto-Positionsbeträge |
@@ -110,35 +187,37 @@ Position auf zwei Nachkommastellen und summiert danach.
 
 ## Verkäufer — `seller_snapshot`
 
+<!-- felder: seller_snapshot -->
 | Feld | Typ | Pflicht | Default | BT | Bemerkung |
 |---|---|---|---|---|---|
 | `name` | string(255) | ja | — | BT-27 | Firmenname |
-| `street` | string(255) | ja | — | BT-31 | Straße |
-| `zip` | string(20) | ja | — | BT-34 | PLZ |
-| `city` | string(255) | ja | — | BT-35 | Ort |
+| `street` | string(255) | nein | — | BT-35 | Straße |
+| `zip` | string(20) | ja (xrechnung) | — | BT-38 | PLZ |
+| `city` | string(255) | ja (xrechnung) | — | BT-37 | Ort |
 | `country` | string(2) | nein | `"DE"` | BT-40 | ISO 3166-1 |
 | `country_subdivision` | string(100) | nein | `""` | BT-39 | Bundesland/Region |
 | `address_line2` | string(255) | nein | `""` | BT-36 | Adresszusatz |
 | `address_line3` | string(255) | nein | `""` | BT-162 | Adresszusatz |
 | `vat_id` | string | nein | `""` | BT-31 | USt-IdNr. |
-| `tax_number` | string | nein | `""` | — | Steuernummer |
+| `tax_number` | string | nein | `""` | BT-32 | Steuernummer |
 | `gln` | string | nein | `""` | — | GLN (13 Stellen, GS1-Prüfziffer) |
 | `identifier` | string(64) | nein | `""` | BT-29 | weitere Verkäuferkennung |
 | `trading_name` | string(255) | nein | `""` | BT-28 | Handelsname |
 | `legal_registration_id` | string(64) | nein | `""` | BT-30 | Handelsregisternummer |
 | `additional_legal_info` | string(255) | nein | `""` | BT-33 | rechtliche Zusatzinfo |
 | `iban` | string | nein | `""` | BT-84 | Zahlungs-IBAN |
-| `bic` | string | nein | `""` | — | BIC/SWIFT |
-| `contact` | Objekt | nein | — | BG-6 | Ansprechpartner (s. u.) |
+| `bic` | string | nein | `""` | BT-86 | BIC/SWIFT |
+| `contact` | Objekt | ja (xrechnung) | — | BG-6 | Ansprechpartner (s. u.) |
 | `tax_representative` | Objekt | nein | — | BG-11/12 | steuerlicher Vertreter (s. u.) |
 
 ### Ansprechpartner — `contact`
 
+<!-- felder: seller_snapshot.contact -->
 | Feld | Typ | Pflicht | Bemerkung |
 |---|---|---|---|
 | `name` | string(255) | nein | Kontaktperson |
-| `phone` | string(50) | nein | Telefon |
-| `email` | string(255) | nein | E-Mail |
+| `phone` | string(50) | ja (xrechnung) | Telefon |
+| `email` | string(255) | ja (xrechnung) | E-Mail |
 
 ### Steuerlicher Vertreter — `tax_representative` (BG-11/12)
 
@@ -159,17 +238,18 @@ zu Pflichtangaben.
 
 ## Käufer — `buyer`
 
+<!-- felder: buyer -->
 | Feld | Typ | Pflicht | Default | BT | Bemerkung |
 |---|---|---|---|---|---|
 | `name` | string(255) | ja | — | BT-44 | Firmenname |
-| `street` | string(255) | ja | — | BT-49 | Straße |
-| `zip` | string(20) | ja | — | BT-50 | PLZ |
-| `city` | string(255) | ja | — | BT-50 | Ort |
+| `street` | string(255) | nein | — | BT-50 | Straße |
+| `zip` | string(20) | ja (xrechnung) | — | BT-53 | PLZ |
+| `city` | string(255) | ja (xrechnung) | — | BT-52 | Ort |
 | `country` | string(2) | nein | `"DE"` | BT-55 | ISO 3166-1 |
 | `country_subdivision` | string(100) | nein | `""` | BT-54 | Bundesland/Region |
 | `address_line2` | string(255) | nein | `""` | BT-51 | Adresszusatz |
 | `address_line3` | string(255) | nein | `""` | BT-163 | Adresszusatz |
-| `vat_id` | string | nein | `""` | BT-48 | USt-IdNr. (Pflicht bei AE/K) |
+| `vat_id` | string | bedingt | `""` | BT-48 | USt-IdNr. (Pflicht bei AE/K) |
 | `gln` | string | nein | `""` | BT-44 | GLN (13 Stellen, GS1-Prüfziffer) |
 | `identifier` | string(64) | nein | `""` | BT-46 | weitere Käuferkennung |
 | `debitor_number` | string(20) | nein | `""` | — | DATEV-Debitorennummer (nur Export, nicht im XML) |
@@ -206,26 +286,28 @@ die generierte — es entsteht kein zweiter Datensatz.
 Optional; fehlt sie, gilt die Käuferadresse. Wird sie angegeben, sind
 `name`, `street`, `zip`, `city` Pflicht.
 
+<!-- felder: shipping -->
 | Feld | Typ | Pflicht | Default | BT |
 |---|---|---|---|---|
-| `name` | string(255) | ja | — | BT-71 |
-| `street` | string(255) | ja | — | BT-73 |
-| `zip` | string(20) | ja | — | BT-74 |
-| `city` | string(255) | ja | — | BT-75 |
+| `name` | string(255) | ja | — | BT-70 |
+| `street` | string(255) | ja | — | BT-75 |
+| `zip` | string(20) | ja | — | BT-78 |
+| `city` | string(255) | ja | — | BT-77 |
 | `country` | string(2) | nein | `"DE"` | BT-80 |
 | `country_subdivision` | string(100) | nein | `""` | BT-79 |
 | `address_line2` | string(255) | nein | `""` | BT-76 |
 | `address_line3` | string(255) | nein | `""` | BT-165 |
-| `gln` | string | nein | `""` | — |
+| `gln` | string | nein | `""` | BT-71 |
 
 ## Positionen — `items[]`
 
 Pflichtfelder je Position: `description`, `quantity`, `unit`,
 `unit_price_net`, `vat_rate`.
 
+<!-- felder: items[] -->
 | Feld | Typ | Pflicht | Default | BT | Bemerkung |
 |---|---|---|---|---|---|
-| `description` | string(500) | ja | — | BT-154 | Bezeichnung |
+| `description` | string(500) | ja | — | BT-153 | Bezeichnung |
 | `quantity` | decimal(…,3) | ja | — | BT-129 | Menge |
 | `unit` | string(10) | ja | — | BT-130 | Einheit (UNCL 5272: HUR Stunde, KGM kg, C62 Stück …) |
 | `unit_price_net` | decimal | ja | — | BT-146 | Nettoeinzelpreis |
@@ -236,10 +318,10 @@ Pflichtfelder je Position: `description`, `quantity`, `unit`,
 | `sku` | string(50) | nein | `""` | BT-155 | Artikelnummer Verkäufer |
 | `gtin` | string | nein | `""` | BT-157 | GTIN (13/14 Stellen, GS1-Prüfziffer) |
 | `buyer_item_id` | string(100) | nein | `""` | BT-156 | Artikelnummer Käufer |
-| `discount_percent` | decimal(5,2) | nein | — | BT-139 | Rabatt in % |
-| `discount_amount` | decimal | nein | — | BT-138 | Rabatt absolut |
+| `discount_percent` | decimal(5,2) | nein | — | BT-138 | Rabatt in % |
+| `discount_amount` | decimal | nein | — | BT-136 | Rabatt absolut |
 | `discount_base_amount` | decimal | nein | — | BT-137 | Rabatt-Basis |
-| `discount_reason` | string | nein | `""` | — | Rabattgrund (Freitext) |
+| `discount_reason` | string | nein | `""` | BT-139 | Rabattgrund (Freitext) |
 | `discount_reason_code` | string(16) | nein | `""` | BT-140 | Rabattgrund-Code (UNTDID 5189) |
 | `charge_amount` | decimal | nein | — | BT-141 | Zuschlag absolut (BG-28) |
 | `charge_base_amount` | decimal | nein | — | BT-142 | Zuschlag-Basis |
@@ -272,6 +354,7 @@ zusätzlich anhand der „Magic Bytes" verifiziert.
 
 **Erlaubte MIME-Typen:** PDF, PNG, JPEG, CSV, ODS (OpenDocument), XLSX, XLS.
 
+<!-- felder: attachments[] -->
 | Feld | Typ | Pflicht | Default | BT | Bemerkung |
 |---|---|---|---|---|---|
 | `filename` | string(255) | ja | — | — | Dateiname |
