@@ -174,19 +174,30 @@ reaktiviert das Abo über den Stripe-Checkout.
 
 ```json
 {
+  "valid": false,
   "data": null,
   "errors": [
     {
-      "code": "invalid_vat_id",
-      "field": "customer.vat_id",
-      "message": "USt-IdNr. ist ungültig oder nicht im EU-VIES-System bekannt."
+      "code": "K_VAT_ID_INVALID",
+      "severity": "error",
+      "field": "items[0]",
+      "message": "USt-IdNr ATU12345678 ist laut VIES nicht gültig."
     }
   ],
-  "meta": {"request_id": "req_xxx"}
+  "meta": {}
 }
 ```
 
-`request_id` bei Bug-Reports an Support mitschicken.
+`code` ist der stabile Wert, gegen den Sie programmieren — bei Steuerfehlern
+der Code aus [Steuerlogik](../reference/tax-logic.md), sonst ein Sammelcode
+wie `schema`, `business` oder `kosit`. `field` zeigt auf die Stelle im
+Payload, die den Fehler ausgelöst hat.
+
+Nicht-blockierende Befunde stehen **nicht** in `errors[]`, sondern in
+`meta.warnings` — die Antwort bleibt 200/201 und das Dokument entsteht.
+Der wichtigste Fall ist `K_VAT_ID_UNCHECKED`: VIES war nicht erreichbar, die
+USt-IdNr. konnte also nicht bestätigt werden, die Rechnung wurde aber
+erzeugt.
 
 ## Tooling
 

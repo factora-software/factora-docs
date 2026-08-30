@@ -130,6 +130,30 @@ geprüft.
 
 ## Prüfregeln — was eine Rechnung blockiert
 
+Die Prüfung läuft auf **jedem schreibenden Weg**: `POST /api/v1/invoices/atomic/`
+(live und Sandbox) und `POST /api/v1/invoices/{id}/finalize/`. Sie greift, bevor
+ein Dokument entsteht — bei einem Treffer wird nichts gespeichert und nichts
+archiviert.
+
+Jeder Fehler kommt mit **seinem** Code im `errors[]` der Antwort, nicht als
+Sammelcode, und mit `field: "items[n]"` auf die betroffene Position:
+
+```json
+{
+  "valid": false,
+  "data": null,
+  "errors": [
+    {
+      "code": "K_VAT_ID_INVALID",
+      "severity": "error",
+      "field": "items[0]",
+      "message": "USt-IdNr ATU12345678 ist laut VIES nicht gültig."
+    }
+  ],
+  "meta": {}
+}
+```
+
 Folgende Steuer-Prüfungen verhindern die Finalisierung (HTTP 400):
 
 | Fehlercode | Kategorie | Bedingung |
@@ -146,12 +170,33 @@ Folgende Steuer-Prüfungen verhindern die Finalisierung (HTTP 400):
 | `E_KU_BT120_MISSING` | E | Kleinunternehmer ohne Befreiungstext |
 | `E_KU_BT121_SET` | E | Kleinunternehmer mit gesetztem VATEX-Code |
 
-Nicht-blockierende Warnungen (HTTP 200, protokolliert):
+Nicht-blockierende Warnungen (HTTP 200/201, in `meta.warnings`):
 
 | Warncode | Kategorie | Bedingung |
 |---|---|---|
 | `K_VAT_ID_UNCHECKED` | K | VIES-Dienst nicht erreichbar |
 | `K_DELIVERY_PROOF_MISSING` | K | Gelangensnachweis noch nicht erfasst |
+
+```json
+{"meta": {"warnings": [
+  {"code": "K_VAT_ID_UNCHECKED", "severity": "warning", "field": "items[0]",
+   "message": "USt-IdNr konnte nicht bei VIES geprüft werden — Service nicht erreichbar."}
+]}}
+```
+
+### VIES ist bewusst fail-open
+
+`K_VAT_ID_INVALID` heißt: VIES hat geantwortet und die Nummer ist **nicht
+registriert**. Nur das blockiert. Ist VIES nicht erreichbar — Wartung,
+Netzfehler, ein einzelner Mitgliedstaat offline — entsteht die Rechnung
+trotzdem und Sie bekommen `K_VAT_ID_UNCHECKED`. Ein Ausfall in Brüssel legt
+Ihre Fakturierung nicht still.
+
+Das Ergebnis wird am Kunden gespeichert und für 24 Stunden wiederverwendet.
+Es hängt an der geprüften Nummer: sobald Sie eine andere USt-IdNr. schicken,
+wird neu geprüft — auch innerhalb der 24 Stunden.
+Eine Plattform, die denselben Käufer täglich abrechnet, löst also nicht je
+Rechnung einen VIES-Aufruf aus.
 
 ## Einfrieren bei Finalisierung (GoBD)
 
