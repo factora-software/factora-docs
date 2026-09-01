@@ -25,17 +25,38 @@ Wird keine Kategorie ausdrücklich gesetzt, leitet Factora sie ab
 1. **Ausdrückliche Vorgabe** (z. B. `AE`, `K`, `G`) → wird übernommen.
 2. **Kleinunternehmer-Profil** → `E`.
 3. **Steuersatz > 0** → `S`.
-4. **Steuersatz = 0** → `Z`.
+4. **Steuersatz = 0** → `Z` im Inland; grenzüberschreitend `K` oder `G`, wenn
+   ein Warensachverhalt vollständig deklariert ist, sonst **unbestimmt**
+   (Finalisierung wird abgelehnt). Siehe *Grenzüberschreitende Einordnung*.
 
 ## Steuersätze
 
-Unterstützt werden die deutschen Sätze **19 %**, **7 %** und **0 %**. Der
-Satz wird je Position im Feld `vat_rate` als Prozentwert übergeben
-(`19.00`, `7.00`, `0.00`). Für EU-B2C-Käufer (`customer_type: "B2C"`,
-Käuferland ≠ Verkäuferland, EU) sind zusätzlich die Sätze des
-**Bestimmungslandes** gültig (OSS-Fernverkauf, §3c UStG — z. B. NL 21 %/9 %);
-die deutschen Sätze bleiben daneben erlaubt (unterhalb der
-10.000-€-Schwelle wird weiter deutsch fakturiert).
+Der Satz wird je Position im Feld `vat_rate` als Prozentwert übergeben
+(`19.00`, `7.00`, `0.00`).
+
+**Welche Sätze gültig sind, entscheidet das Land des Verkäufers** —
+`seller_snapshot.country` beziehungsweise das Land des Mandanten:
+
+| Verkäufer sitzt in | gültige Sätze |
+|---|---|
+| **Deutschland** (Vorgabe) | 19 %, 7 %, 0 % |
+| **EU-Mitgliedstaat** | Normal- und ermäßigte Sätze dieses Landes plus 0 % (z. B. AT: 20 %, 13 %, 10 %, 0 %) |
+| **außerhalb der EU** | wird abgelehnt — für diese Länder liegen uns keine Sätze vor |
+
+0 % ist überall möglich: befreite, Reverse-Charge- und innergemeinschaftliche
+Positionen tragen ihn.
+
+Für EU-B2C-Käufer (`customer_type: "B2C"`, Käuferland ≠ Verkäuferland, EU)
+sind **zusätzlich** die Sätze des **Bestimmungslandes** gültig
+(OSS-Fernverkauf, §3c UStG — z. B. NL 21 %/9 %); die Sätze des
+Verkäuferlandes bleiben daneben erlaubt (unterhalb der 10.000-€-Schwelle
+wird weiter im eigenen Land fakturiert).
+
+> Ein Verkäufer außerhalb der EU wird mit einer Geschäftsregel-Meldung
+> abgelehnt („Verkäuferland CH wird nicht unterstützt …"), nicht stillschweigend
+> durchgelassen. Bis August 2026 entfiel für jeden Nicht-DE-Verkäufer jede
+> Satzprüfung; wer dort ein anderes Land eintrug, konnte jeden Satz zwischen
+> 0 und 30 % ansetzen.
 
 ## Befreiungsgründe (BT-120 / BT-121)
 
@@ -49,10 +70,34 @@ den deterministischen Fällen automatisch:
 | **K** | „Innergemeinschaftliche Lieferung (§4 Nr. 1b UStG)" | `VATEX-EU-IC` |
 | **G** | „Steuerfreie Ausfuhrlieferung (§4 Nr. 1a UStG)" | `VATEX-EU-G` |
 | **E** (§19) | „Kleinunternehmer gemäß §19 UStG" | *(leer)* |
-| **O** | individuell zu setzen | *(leer)* |
+| **O** | „Nicht steuerbarer Umsatz, Leistungsort im Ausland (§3a Abs. 2 UStG / Art. 44 MwStSystRL)" | `VATEX-EU-O` |
 
 Eigene Texte/Codes können je Position übergeben werden und haben Vorrang vor
 den Voreinstellungen.
+
+**`O` trägt auf der Position keinen Steuersatz.** BR-O-05, BR-O-06 und
+BR-O-07 verbieten bei „nicht steuerbar" den Steuersatz auf der Position
+(BT-152) sowie an Rabatt und Zuschlag (BT-96/103). `O` bedeutet dort *Satz
+nicht vorhanden*, nicht *Satz null*; `0.00 %` wäre die Aussage „besteuert, mit
+null Prozent", und die trifft auf einen nicht steuerbaren Umsatz nicht zu.
+
+In der **Steueraufstellung** bleibt BT-119 dagegen stehen: BR-48 erlaubt zwar,
+ihn bei einer nicht steuerbaren Rechnung wegzulassen, BR-DE-14 verlangt ihn
+aber — und `xrechnung` ist das Standardprofil.
+
+**`O` und USt-IdNr. schließen sich aus.** BR-O-02: eine Rechnung mit einer
+`O`-Position darf weder BT-31 (Verkäufer) noch BT-63 noch BT-48 (Käufer)
+tragen. Der Verkäufer weist sich dann über die Steuernummer (BT-32) aus.
+
+**`S` und `Z` dürfen keinen Befreiungsgrund tragen** (BR-S-10, BR-Z-10). Ein
+mitgeschickter Text oder Code wird dort nicht übernommen — 0 % ist kein
+Befreiungsgrund, sondern ein Steuersatz. Wer einen steuerfreien Umsatz meint,
+setzt `E`, `AE`, `K`, `G` oder `O`.
+
+Umgekehrt wird eine Kategorie **ohne** Grund abgelehnt statt durchgereicht
+(BR-E-10, BR-AE-10, BR-IC-10, BR-G-10, BR-O-10). Für `AE`/`K`/`G`/`O` füllt
+Factora den Grund selbst; bei `E` außerhalb §19 nicht — §4 UStG kennt zwei
+Dutzend Befreiungen, und welche gemeint ist, weiß nur der Aufrufer.
 
 ## Reverse Charge §13b (AE)
 
@@ -109,16 +154,95 @@ API-Rechnung übergeben werden.
 
 ## Grenzüberschreitende Einordnung
 
-Aus Verkäufer-/Käuferland, USt-IdNr. und Kundentyp leitet Factora die
-zutreffende Behandlung ab:
+Über eine Grenze entscheidet nicht das Länderpaar allein, sondern **was
+geliefert wird**. Deshalb trägt jede Position das optionale Feld
+`items[].supply_type` mit den Werten `goods` (Warenlieferung) oder `service`
+(Dienstleistung).
 
-- **Gleiches Land** → `S` (Regelsteuer).
-- **EU-grenzüberschreitend, B2B mit USt-IdNr.** → `AE` (Reverse Charge).
-- **EU-grenzüberschreitend, B2C** → `S`; gültig sind deutsche Sätze
-  **und** die Sätze des Bestimmungslandes (OSS-Fernverkauf, §3c UStG).
-- **Drittland-Export** → `G`.
-- **Nordirland (XI, Brexit-Protokoll):** Warenlieferungen EU-ähnlich
-  (AE/S), Dienstleistungen als Export (`G`).
+Factora leitet daraus **nur `K` und `G`** ab, und nur aus einem vollständig
+deklarierten Warensachverhalt:
+
+| Verkäufer → Käufer | Voraussetzungen | Kategorie |
+|---|---|---|
+| gleiches Land | — | `S` |
+| EU → EU, B2B/B2G | `supply_type: goods` · gültige fremde USt-IdNr. · `shipping.country` in einem anderen Mitgliedstaat (BT-80) · `delivery_date` oder Abrechnungszeitraum (BT-72/BG-14) | `K` (§6a UStG) |
+| EU → EU, B2C | — | `S`; zusätzlich gültig sind die Sätze des Bestimmungslandes (OSS-Fernverkauf, §3c UStG) |
+| EU → Drittland | `supply_type: goods` · `shipping.country` außerhalb der EU | `G` (§6 UStG) |
+| alles übrige | — | **keine Ableitung** — die Position bleibt unbestimmt |
+
+Die Lieferangaben sind nicht willkürlich gewählt: **BR-IC-11** verlangt bei
+`K` das Lieferdatum (BT-72) oder den Abrechnungszeitraum (BG-14),
+**BR-IC-12** das Lieferland (BT-80). Ohne sie wäre die Rechnung ohnehin
+formal unzulässig.
+
+### Was Factora nicht behauptet
+
+**Die Ableitung kennzeichnet die Rechnung — sie ersetzt keinen Nachweis.**
+`supply_type`, BT-80 und BT-72/BG-14 sind Ihre Angaben. Dass die Ware
+tatsächlich ins übrige Gemeinschaftsgebiet gelangt ist, weisen Sie nach §17b
+UStDV über die Gelangensbestätigung nach; die Ausfuhr belegen Sie nach §8
+UStDV. Beides bleibt bei Ihnen und außerhalb dieser Ableitung.
+
+### `AE` und `O` werden nie automatisch vergeben
+
+§3a Abs. 2 UStG ist die B2B-Grundregel, aber Abs. 3 bis 8 nehmen ganze Klassen
+heraus — Grundstücksleistungen, Eintrittsberechtigungen, Restaurantleistungen,
+Personenbeförderung, kurzfristige Vermietung. Welcher Fall bei Ihnen vorliegt,
+steht in keinem Feld, das wir halten. Eine Dienstleistung ohne gesetzte
+Kategorie bleibt deshalb `Z`; für `AE` und `O` setzen Sie
+`tax_category_code` selbst.
+
+### Unbestimmt bleibt unbestimmt
+
+Reichen die Angaben nicht, setzen wir **keine** Ersatzkategorie. Insbesondere
+nicht `Z`: `Z` heißt „mit 0 % besteuert" und ist eine steuerliche Aussage über
+Ihren Umsatz — „wir wissen es nicht" ist keine. Ein Dokument, das die
+Formprüfung besteht und etwas Falsches behauptet, ist schlimmer als eine
+Ablehnung, weil niemand es bemerkt.
+
+Praktisch heißt das: der Entwurf darf die Kategorie offen lassen, die
+**Finalisierung wird abgelehnt** — mit einer Meldung, die sagt, welche Angabe
+fehlt:
+
+```json
+{ "field": "items[0]",
+  "message": "Steuerkategorie konnte aus den übergebenen Angaben nicht bestimmt werden (BT-151). Bitte tax_category_code selbst setzen — oder für eine grenzüberschreitende Warenlieferung supply_type, shipping.country und delivery_date bzw. den Abrechnungszeitraum mitgeben." }
+```
+
+Das betrifft ausschließlich **grenzüberschreitende Nullsatz-Positionen ohne
+ausreichende Angaben**. Ein Inlandsumsatz mit 0 % bleibt `Z` wie bisher, und
+eine Position mit gesetztem `tax_category_code` ohnehin.
+
+> Eine ausdrücklich gesetzte Kategorie gewinnt immer. Ein **positiver
+> Steuersatz** wird nie in `K`/`G` umgedeutet — diese Kategorien verlangen
+> 0 % (BR-IC-*, BR-G-*).
+
+### Die USt-IdNr. muss eine sein
+
+Für `K` wird das Format nach EN 16931 geprüft und das Länderpräfix gegen das
+Käuferland gehalten; eine beliebige Zeichenkette genügt nicht.
+
+**Taxonomie und Verifikation sind getrennte Zustände.** Das VIES-Ergebnis
+ändert die Kategorie in **keinem** Fall — weder ein Ausfall noch ein
+Negativverdikt. Der Sachverhalt bestimmt, was die Position ist; die
+Nummernprüfung entscheidet, ob das Dokument entstehen darf:
+
+| VIES | Kategorie | Ergebnis |
+|---|---|---|
+| `valid` | `K` | Rechnung entsteht |
+| nicht erreichbar | `K` | Rechnung entsteht, Warnung `K_VAT_ID_UNCHECKED` |
+| „nicht registriert" | `K` | **Ablehnung** mit `K_VAT_ID_INVALID` |
+
+Die mittlere Zeile ist der Grund für die Trennung: hinge die Kategorie am
+VIES-Zustand, ergäbe derselbe Payload je nach Tagesform in Brüssel ein anderes
+Dokument.
+
+### Nordirland (XI, Brexit-Protokoll)
+
+Warenlieferungen folgen dem EU-Pfad (`K`), Dienstleistungen dem Drittlandpfad
+— und werden dort aus demselben Grund wie oben nicht automatisch eingeordnet.
+Steht am Kunden `ni_supply_type = "mixed"`, entscheidet die Position:
+`supply_type` schlägt die Kundenangabe.
 
 ## Dokumentweite Steueraufstellung (BG-23)
 

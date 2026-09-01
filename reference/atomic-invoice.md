@@ -312,6 +312,7 @@ Pflichtfelder je Position: `description`, `quantity`, `unit`,
 | `unit` | string(10) | ja | — | BT-130 | Einheit (UNCL 5272: HUR Stunde, KGM kg, C62 Stück …) |
 | `unit_price_net` | decimal | ja | — | BT-146 | Nettoeinzelpreis |
 | `vat_rate` | decimal(5,2) | ja | — | BT-152 | Steuersatz in % (19.00 / 7.00 / 0.00) |
+| `supply_type` | string | nein | `null` | — | `goods` oder `service`. `goods` ermöglicht mit Lieferangaben die Ableitung von `K` bzw. `G` — siehe [Steuerlogik](tax-logic.md) |
 | `tax_category_code` | string | nein | `""` | BT-151 | Kategorie (S/AA/Z/E/AE/K/G/O) — siehe [Steuerlogik](tax-logic.md) |
 | `tax_exemption_reason_code` | string | nein | `""` | BT-121 | VATEX-Code (Pflicht bei Befreiung) |
 | `tax_exemption_reason_text` | string | nein | `""` | BT-120 | Befreiungstext |
