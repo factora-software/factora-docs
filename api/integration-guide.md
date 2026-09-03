@@ -205,5 +205,5 @@ Pro API-Schlüssel lassen sich **Standardwerte** hinterlegen, die automatisch in
 | 401 | Authentifizierung fehlgeschlagen (Schlüssel fehlt/ungültig /abgelaufen, IP nicht erlaubt). |
 | 402 | Harte Rechnungs-Obergrenze erreicht (nur Free-Tarif) — Upgrade erforderlich, kein Rate-Limit. |
 | 403 | Kein API-Zugang (Tarif) oder fehlender Scope. |
-| 409 | Rechnungsnummer existiert bereits. |
+| 409 | Rechnungsnummer existiert bereits. `data` trägt die bereits gebuchte Rechnung (`id`, `status`, `invoice_date`) — den Vorgang als erledigt verbuchen statt erneut senden. |
 | 429 | Tageskontingent des Schlüssels erschöpft (50.000 Aufrufe / 24 h) — Antwort trägt `Retry-After`. |

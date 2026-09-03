@@ -219,7 +219,7 @@ Kontingent, Schema-Validierung der Eingabe) fehlen sie weiterhin ganz.
 | 404 | `not_found` | Objekt existiert nicht oder gehört zu anderem Konto |
 | 405 | `method_not_allowed` | HTTP-Methode am Endpunkt nicht erlaubt |
 | 406 | `not_acceptable` | Nicht unterstütztes Antwortformat |
-| 409 | `conflict` | Doppelte Rechnungsnummer, Dublette, Mandant in Verwendung |
+| 409 | `conflict` | Doppelte Rechnungsnummer, Dublette, Mandant in Verwendung. Bei doppelter Rechnungsnummer trägt `data` die **bereits gebuchte** Rechnung — nicht wiederholen, siehe [Atomic Invoice](atomic-invoice.md#rechnungsnummer-schon-vergeben--http-409) |
 | 415 | `unsupported_media_type` | Nicht unterstützter `Content-Type` |
 | 429 | `rate_limited` | Tageskontingent überschritten — Antwort trägt `Retry-After` |
 | 502 | `bad_gateway` | Webhook-Zustellung fehlgeschlagen (Test) |

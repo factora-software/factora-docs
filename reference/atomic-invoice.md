@@ -209,6 +209,7 @@ Position auf zwei Nachkommastellen und summiert danach.
 | `bic` | string | nein | `""` | BT-86 | BIC/SWIFT |
 | `contact` | Objekt | ja (xrechnung) | — | BG-6 | Ansprechpartner (s. u.) |
 | `tax_representative` | Objekt | nein | — | BG-11/12 | steuerlicher Vertreter (s. u.) |
+| `tax_registrations` | Liste | nein | `[]` | — | Registrierungen außerhalb des Sitzlandes (s. u.) |
 
 ### Ansprechpartner — `contact`
 
@@ -235,6 +236,52 @@ zu Pflichtangaben.
 | `city` | string(255) | BT-66 | Ort |
 | `country_subdivision` | string(100) | BT-68 | Region |
 | `country` | string(2) | BT-69 | Land |
+
+### Registrierungen im Ausland — `tax_registrations`
+
+Maßgeblich für den **Steuersatz** ist der Ort der Leistung, nicht der Sitz
+des Verkäufers. Erbringt ein deutsches Unternehmen eine Inlandleistung in der
+Schweiz, ist es dort mehrwertsteuerpflichtig und weist **8,10 %** aus — ein
+Satz, den wir gegen Ihr Sitzland sonst ablehnen würden.
+
+Damit wir das auseinanderhalten können, erklären Sie die Registrierung:
+
+```json
+"seller_snapshot": {
+  "country": "DE",
+  "tax_registrations": [
+    { "country": "CH", "number": "CHE-123.456.789 MWST" }
+  ]
+}
+```
+
+| Feld | Typ | Bemerkung |
+|---|---|---|
+| `country` | string(2) | ISO-3166-1-alpha-2 des Landes der Registrierung |
+| `number` | string(64) | die dortige Steuer-/MWST-Nummer |
+
+**Damit ein fremder Satz akzeptiert wird, müssen drei Dinge zusammenkommen:**
+
+1. `shipping.country` nennt den Leistungsort (BT-80),
+2. für dieses Land liegt hier eine Registrierung,
+3. wir halten für dieses Land Steuersätze.
+
+Fehlt eines davon, gelten weiter die Sätze Ihres Sitzlandes. Das ist Absicht:
+eine Lieferung in die Schweiz ist im Regelfall eine **steuerfreie Ausfuhr mit
+0 %**, und ohne die Registrierung ließe sich 8,10 % nicht von einem
+Tippfehler unterscheiden.
+
+Die Sätze Ihres Sitzlandes bleiben zusätzlich gültig — eine Rechnung darf
+beides tragen.
+
+**Wir prüfen die Nummer nicht.** Für Drittländer gibt es keinen Prüfdienst
+wie VIES; die Angabe ist Ihre Erklärung, so wie `supply_type` eine Erklärung
+ist. Hinterlegt werden kann sie auch am Mandanten (`seller_data`), dann gilt
+sie für jede Rechnung dieses Mandanten.
+
+Heute hinterlegte Sätze außerhalb der EU: **Schweiz** — 8,10 % / 2,6 % /
+3,8 %, gültig seit dem 1. Januar 2024. Weitere Länder nehmen wir auf, wenn
+sie gebraucht werden.
 
 ## Käufer — `buyer`
 
@@ -403,6 +450,55 @@ Frei verwendbares Objekt für weitere EN-16931-Felder. Werte aus dem Aufruf
 | `data.xml_base64` | string | XRechnung-XML (Base64) |
 
 Fehlerfälle und Fehlercodes: siehe [API-Überblick](api-overview.md#fehler--und-antwortstruktur).
+
+## Rechnungsnummer schon vergeben — HTTP `409`
+
+Trägt eine Rechnungsnummer bereits eine gebuchte Rechnung, antwortet der
+Endpunkt mit `409`. **Das ist kein Grund, den Aufruf zu wiederholen** — die
+Antwort enthält die bereits gebuchte Rechnung, damit Sie „ist schon da" von
+„nochmal senden" unterscheiden können:
+
+```json
+{
+  "valid": false,
+  "data": {
+    "id": 12345,
+    "invoice_number": "RE-2026-001",
+    "status": "final",
+    "profile": "xrechnung",
+    "invoice_date": "2026-09-01",
+    "created_at": "2026-09-01T08:30:11Z"
+  },
+  "errors": [
+    { "code": "conflict", "field": "", "severity": "error",
+      "message": "Rechnungsnummer 'RE-2026-001' existiert bereits." }
+  ],
+  "meta": {}
+}
+```
+
+**Was Sie damit tun:** Übernehmen Sie `data.id` als Referenz und behandeln
+Sie den Vorgang als abgeschlossen. Die Rechnung existiert, ist finalisiert
+und wurde bereits abgerechnet — ein erneutes Senden erzeugt keine zweite
+Rechnung und liefert dauerhaft denselben `409`.
+
+Ein `409` **ohne** `data` (also `data: null`) bedeutet etwas anderes: dort
+trägt `errors[].code` den Wert `idempotency_in_flight`, ein paralleler
+Aufruf mit demselben `Idempotency-Key` läuft gerade. Warten Sie kurz und
+fragen Sie das Ergebnis erneut ab.
+
+### Wiederholungen von vornherein vermeiden
+
+Schicken Sie pro Rechnung **einen stabilen** `Idempotency-Key` — dieselbe
+UUID bei jedem Wiederholungsversuch derselben Rechnung, nicht bei jedem
+Versuch eine neue. Dann liefert der zweite Aufruf die zwischengespeicherte
+`201`-Antwort samt PDF und XML zurück (Header `Idempotent-Replayed: true`)
+statt eines `409`. Details unter
+[Idempotenz](api-overview.md#idempotenz).
+
+Ein Client, der bei jedem Versuch einen neuen Schlüssel erzeugt, umgeht den
+Mechanismus: für Factora ist das ein neuer Aufruf, und der scheitert dann an
+der Nummer statt am Schlüssel.
 
 ## Wichtige Kombinationsregeln
 
