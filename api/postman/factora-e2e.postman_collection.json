@@ -161,19 +161,23 @@
           "response": []
         },
         {
-          "name": "1.3 Get UBL (Peppol BIS 3.0) XML",
+          "name": "1.3 UBL of a finalised invoice is refused (B-AP91)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Content-Type is XML', function () {",
-                  "    pm.expect(pm.response.headers.get('Content-Type') || '').to.match(/xml/);",
-                  "});",
-                  "pm.test('Body looks right', function () { pm.expect(pm.response.text()).to.match(/<Invoice[\\s>]/); });",
-                  "pm.collectionVariables.set('ubl_xml', pm.response.text());"
+                  "// B-AP91: only CII and PDF are archived at finalisation. A UBL rendered from",
+                  "// today's master data would not be the archived document, so the API refuses",
+                  "// instead of re-rendering. UBL is served for drafts only.",
+                  "pm.test('Status 409 Conflict', function () { pm.response.to.have.status(409); });",
+                  "pm.test('Envelope names the reason', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.valid).to.eql(false);",
+                  "    pm.expect(body.errors[0].code).to.eql('conflict');",
+                  "    pm.expect(body.errors[0].message).to.match(/UBL/);",
+                  "});"
                 ]
               }
             }
@@ -261,68 +265,6 @@
               "raw": "{{kosit_url}}/",
               "host": [
                 "{{kosit_url}}"
-              ],
-              "path": [
-                ""
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "2.2 Validate UBL against KoSIT (Peppol)",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (!pm.collectionVariables.get('ubl_xml')) {",
-                  "    throw new Error('ubl_xml is empty - run the XML request first');",
-                  "}"
-                ]
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status 200 OK', function () { pm.response.to.have.status(200); });",
-                  "const body = pm.response.text();",
-                  "pm.test('KoSIT assessment valid (root @valid=true)', function () {",
-                  "    pm.expect(body, 'KoSIT report').to.match(/valid=\"true\"/);",
-                  "    pm.expect(body).to.not.match(/valid=\"false\"/);",
-                  "    if (/valid=\"false\"/.test(body)) {",
-                  "        const m = body.match(/<[^>]*message[\\s\\S]{0,300}?<\\/[^>]*message>/);",
-                  "        if (m) console.log('First KoSIT message:\\n' + m[0]);",
-                  "    }",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/xml"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "options": {
-                "raw": {
-                  "language": "xml"
-                }
-              },
-              "raw": "{{ubl_xml}}"
-            },
-            "url": {
-              "raw": "{{kosit_peppol_url}}/",
-              "host": [
-                "{{kosit_peppol_url}}"
               ],
               "path": [
                 ""

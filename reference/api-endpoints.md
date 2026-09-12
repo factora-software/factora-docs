@@ -32,8 +32,8 @@ maßgeblich**.
 | POST | `/invoices/{id}/send/` | Finalisierte Rechnung per E-Mail versenden | `invoices:write` | — |
 | GET | `/invoices/{id}/pdf/` | ZUGFeRD-PDF herunterladen | `invoices:read` | — |
 | GET | `/invoices/{id}/xml/` | XRechnung-XML herunterladen | `invoices:read` | — |
-| GET | `/invoices/{id}/xml/cii/` | CII/XRechnung-XML live erzeugen | `invoices:read` | — |
-| GET | `/invoices/{id}/xml/ubl/` | UBL/Peppol-XML live erzeugen | `invoices:read` | — |
+| GET | `/invoices/{id}/xml/cii/` | CII/XRechnung-XML — finalisiert: das archivierte XML (= `/xml/`), Entwurf: aus dem aktuellen Stand erzeugt (B-AP91) | `invoices:read` | — |
+| GET | `/invoices/{id}/xml/ubl/` | UBL/Peppol-XML eines Entwurfs; finalisiert → `409` (kein UBL-Artefakt archiviert, kein Re-Rendern; B-AP91) | `invoices:read` | — |
 | POST | `/invoices/{id}/dispatch/` | Rechnung zum Transport einreihen (E-Mail/Peppol) | `invoices:write` | — |
 | GET | `/invoices/{id}/dispatch-log/` | Versandhistorie abrufen | `invoices:read` | — |
 | GET | `/customers/` | Kunden auflisten | `customers:read` | — |

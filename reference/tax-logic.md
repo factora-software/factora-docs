@@ -19,15 +19,21 @@ Pflichtangaben wie Befreiungsgründe und die dokumentweite Steueraufstellung.
 
 ### Automatische Ableitung
 
-Wird keine Kategorie ausdrücklich gesetzt, leitet Factora sie ab
-(erste zutreffende Regel gewinnt):
+Die Entscheidung erfolgt in dieser Reihenfolge:
 
-1. **Ausdrückliche Vorgabe** (z. B. `AE`, `K`, `G`) → wird übernommen.
-2. **Kleinunternehmer-Profil** → `E`.
-3. **Steuersatz > 0** → `S`.
-4. **Steuersatz = 0** → `Z` im Inland; grenzüberschreitend `K` oder `G`, wenn
-   ein Warensachverhalt vollständig deklariert ist, sonst **unbestimmt**
-   (Finalisierung wird abgelehnt). Siehe *Grenzüberschreitende Einordnung*.
+1. **Ausdrückliche Vorgabe** (z. B. `AE`, `K`, `G`) → wird übernommen;
+   die fachlichen Prüfungen bei der Finalisierung bleiben bestehen.
+2. **Rechtsgrundlage aus dem Katalog** → sofern sie für den Vorgang anwendbar
+   und aktiv ist. Kunden- und Mandanten-Defaults dürfen einer eindeutigen
+   Ableitung nicht widersprechen. `K` und `G` verlangen auch hier den
+   vollständig deklarierten Warensachverhalt.
+3. **Ableitung aus den Tatsachen** → Kleinunternehmer-Profil ergibt `E`,
+   ein positiver Steuersatz sonst `S`. Bei 0 % können vollständig deklarierte
+   grenzüberschreitende Warenlieferungen `K` oder `G` ergeben.
+
+**0 % allein ergibt niemals `Z`, auch nicht im Inland.** Ohne tragfähige
+Angabe, Rechtsgrundlage oder Ableitung bleibt die Kategorie unbestimmt;
+der Entwurf ist möglich, die Finalisierung wird abgelehnt.
 
 ## Steuersätze
 
@@ -189,8 +195,8 @@ UStDV. Beides bleibt bei Ihnen und außerhalb dieser Ableitung.
 heraus — Grundstücksleistungen, Eintrittsberechtigungen, Restaurantleistungen,
 Personenbeförderung, kurzfristige Vermietung. Welcher Fall bei Ihnen vorliegt,
 steht in keinem Feld, das wir halten. Eine Dienstleistung ohne gesetzte
-Kategorie bleibt deshalb `Z`; für `AE` und `O` setzen Sie
-`tax_category_code` selbst.
+Kategorie bleibt bei 0 % ohne anwendbare Rechtsgrundlage deshalb unbestimmt;
+für `AE` und `O` erklären Sie die Kategorie oder die passende Rechtsgrundlage.
 
 ### Unbestimmt bleibt unbestimmt
 
@@ -209,9 +215,9 @@ fehlt:
   "message": "Steuerkategorie konnte aus den übergebenen Angaben nicht bestimmt werden (BT-151). Bitte tax_category_code selbst setzen — oder für eine grenzüberschreitende Warenlieferung supply_type, shipping.country und delivery_date bzw. den Abrechnungszeitraum mitgeben." }
 ```
 
-Das betrifft ausschließlich **grenzüberschreitende Nullsatz-Positionen ohne
-ausreichende Angaben**. Ein Inlandsumsatz mit 0 % bleibt `Z` wie bisher, und
-eine Position mit gesetztem `tax_category_code` ohnehin.
+Das betrifft auch **inländische Nullsatz-Positionen ohne ausreichende
+Angaben**. Ein echter Nullsatz-Umsatz benötigt eine ausdrückliche Kategorie
+`Z` oder eine anwendbare Rechtsgrundlage; der Satz allein erklärt ihn nicht.
 
 > Eine ausdrücklich gesetzte Kategorie gewinnt immer. Ein **positiver
 > Steuersatz** wird nie in `K`/`G` umgedeutet — diese Kategorien verlangen
@@ -257,7 +263,9 @@ geprüft.
 Die Prüfung läuft auf **jedem schreibenden Weg**: `POST /api/v1/invoices/atomic/`
 (live und Sandbox) und `POST /api/v1/invoices/{id}/finalize/`. Sie greift, bevor
 ein Dokument entsteht — bei einem Treffer wird nichts gespeichert und nichts
-archiviert.
+archiviert. Sie ist Teil der Finalisierungsoperation selbst, nicht des
+Endpunkts (B-AP90): auch interne Wege, die eine Rechnung final oder
+freigegeben setzen, laufen durch dieselbe Prüfung.
 
 Jeder Fehler kommt mit **seinem** Code im `errors[]` der Antwort, nicht als
 Sammelcode, und mit `field: "items[n]"` auf die betroffene Position:

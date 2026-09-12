@@ -8,9 +8,16 @@ headless via Newman.
 
 1. **1.1** atomic-Rechnung anlegen (maximaler BR-DE-Payload, alle C2-Felder) → `POST {{base_url}}/invoices/atomic/`
 2. **1.2** CII/XRechnung-XML holen → `GET {{base_url}}/invoices/{id}/xml/cii/`
-3. **1.3** UBL/Peppol-BIS-XML holen → `GET {{base_url}}/invoices/{id}/xml/ubl/`
+   (für die finalisierte Rechnung exakt das archivierte XML, B-AP91)
+3. **1.3** UBL einer finalisierten Rechnung → `GET {{base_url}}/invoices/{id}/xml/ubl/`
+   antwortet **409** mit Envelope (B-AP91: bei der Finalisierung wird nur
+   CII + PDF archiviert; UBL gibt es nur für Entwürfe). Der Schritt prüft
+   genau diesen Vertrag.
 4. **2.1** CII gegen KoSIT-XRechnung-Validator → `POST {{kosit_url}}/`
-5. **2.2** UBL gegen KoSIT-Peppol-Validator → `POST {{kosit_peppol_url}}/`
+
+Die frühere UBL-Validierung (2.2) ist mit B-AP91 entfallen — ein atomic
+angelegtes Dokument ist finalisiert und hat kein UBL. UBL-Konformität gegen
+den Peppol-Validator deckt `backend/apps/invoices/tests/integration/test_c2_kosit.py` ab.
 
 ## Dateien
 
