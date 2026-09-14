@@ -45,7 +45,7 @@ Der Tenant steht auf `pending_card`:
 Dasselbe Verhalten greift bei `paused` — das ist ein **kostenpflichtiges
 Abo mit fehlgeschlagener Zahlung**, nicht ein abgelaufener Testzeitraum.
 Finalisierte Rechnungen bleiben in jedem dieser Zustände abrufbar (GoBD:
-10 Jahre Aufbewahrung).
+acht Jahre Aufbewahrung nach § 147 Abs. 3 AO).
 
 ### Was kostet die API?
 
@@ -241,8 +241,8 @@ zur Unterschrift gestellt (in Vorbereitung — bis dahin auf Anfrage:
 ### Sind die Rechnungen revisionssicher (GoBD)?
 
 Ja. Finalisierte Rechnungen sind im Backend immutable (Number, Datum,
-Beträge, Customer-Snapshot, Audit-Log). Aufbewahrungspflicht 10 Jahre
-liegt beim Rechnungssteller — Factora archiviert solange der Tenant
+Beträge, Customer-Snapshot, Audit-Log). Die Aufbewahrungspflicht (acht
+Jahre, § 147 Abs. 3 AO i.V.m. § 14b Abs. 1 UStG) liegt beim Rechnungssteller — Factora archiviert solange der Tenant
 aktiv ist.
 
 ## Support

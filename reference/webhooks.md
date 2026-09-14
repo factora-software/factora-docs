@@ -93,7 +93,13 @@ Ergebnis. Stimmen die Werte nicht überein, ist der Request abzulehnen.
 | Automatische Abschaltung | nach **8** aufeinanderfolgenden Fehlschlägen |
 
 Ein automatisch abgeschalteter Endpunkt lässt sich in der Console wieder
-aktivieren.
+aktivieren. **Während der Abschaltung werden keine Ereignisse nachgeliefert:**
+Ereignisse, die in dieser Zeit eintreten, erzeugen für den abgeschalteten
+Endpunkt keine Zustellung und werden nach der Reaktivierung nicht nachgeholt.
+Nur Zustellungen, die vor der Abschaltung bereits angelegt waren und deren
+Versuche noch nicht ausgeschöpft sind, werden nach der Reaktivierung erneut
+versucht. Wer den Zeitraum lückenlos braucht, liest die fehlenden Rechnungen
+über `GET /invoices/` nach.
 
 Die Zustellhistorie eines Webhooks ist über
 `GET /webhooks/{id}/deliveries/` abrufbar (Versuche, Status, Antwortzeit,

@@ -21,15 +21,21 @@ Pflichtangaben wie Befreiungsgründe und die dokumentweite Steueraufstellung.
 
 Die Entscheidung erfolgt in dieser Reihenfolge:
 
-1. **Ausdrückliche Vorgabe** (z. B. `AE`, `K`, `G`) → wird übernommen;
-   die fachlichen Prüfungen bei der Finalisierung bleiben bestehen.
-2. **Rechtsgrundlage aus dem Katalog** → sofern sie für den Vorgang anwendbar
-   und aktiv ist. Kunden- und Mandanten-Defaults dürfen einer eindeutigen
-   Ableitung nicht widersprechen. `K` und `G` verlangen auch hier den
-   vollständig deklarierten Warensachverhalt.
+1. **Ausdrückliche Vorgabe** (`tax_category_code`, z. B. `AE`, `K`, `G`)
+   → wird übernommen; die fachlichen Prüfungen bei der Finalisierung bleiben
+   bestehen. Zulässig sind genau die sieben Codes der Tabelle oben; jeder
+   andere Code wird **abgelehnt** und landet nicht in BT-151.
+2. **Rechtsgrundlage aus dem Katalog** (am Kunden oder Mandanten
+   hinterlegt) → sofern sie für den Vorgang tragen kann: sie füllt eine
+   Lücke, überstimmt aber keine eindeutige Ableitung aus den Tatsachen.
+   `K` und `G` verlangen in jedem Fall den vollständig deklarierten
+   Warensachverhalt (Schritt 3). Eine **stillgelegte** Rechtsgrundlage, die
+   die Position entschieden hätte, macht sie **unbestimmt** — es wird nicht
+   ersatzweise abgeleitet.
 3. **Ableitung aus den Tatsachen** → Kleinunternehmer-Profil ergibt `E`,
    ein positiver Steuersatz sonst `S`. Bei 0 % können vollständig deklarierte
-   grenzüberschreitende Warenlieferungen `K` oder `G` ergeben.
+   grenzüberschreitende Warenlieferungen `K` oder `G` ergeben; alles andere
+   bleibt bei 0 % unbestimmt.
 
 **0 % allein ergibt niemals `Z`, auch nicht im Inland.** Ohne tragfähige
 Angabe, Rechtsgrundlage oder Ableitung bleibt die Kategorie unbestimmt;
@@ -170,11 +176,14 @@ deklarierten Warensachverhalt:
 
 | Verkäufer → Käufer | Voraussetzungen | Kategorie |
 |---|---|---|
-| gleiches Land | — | `S` |
-| EU → EU, B2B/B2G | `supply_type: goods` · gültige fremde USt-IdNr. · `shipping.country` in einem anderen Mitgliedstaat (BT-80) · `delivery_date` oder Abrechnungszeitraum (BT-72/BG-14) | `K` (§6a UStG) |
-| EU → EU, B2C | — | `S`; zusätzlich gültig sind die Sätze des Bestimmungslandes (OSS-Fernverkauf, §3c UStG) |
+| gleiches Land | positiver Steuersatz | `S`; bei 0 % **keine Ableitung** |
+| EU → EU, B2B/B2G | `supply_type: goods` · formal gültige USt-IdNr. des Käufers mit passendem Länderpräfix · `shipping.country` in einem anderen Mitgliedstaat (BT-80) · `delivery_date` oder Abrechnungszeitraum (BT-72/BG-14) | `K` (§6a UStG) |
+| EU → EU, B2C | positiver Steuersatz | `S`; zusätzlich gültig sind die Sätze des Bestimmungslandes (OSS-Fernverkauf, §3c UStG); bei 0 % **keine Ableitung** |
 | EU → Drittland | `supply_type: goods` · `shipping.country` außerhalb der EU | `G` (§6 UStG) |
 | alles übrige | — | **keine Ableitung** — die Position bleibt unbestimmt |
+
+Die `S`-Zeilen ergeben sich bereits aus dem positiven Satz (Schritt 3 der
+Ableitung); die Länderprüfung leitet ausschließlich `K` und `G` ab.
 
 Die Lieferangaben sind nicht willkürlich gewählt: **BR-IC-11** verlangt bei
 `K` das Lieferdatum (BT-72) oder den Abrechnungszeitraum (BG-14),
@@ -247,8 +256,9 @@ Dokument.
 
 Warenlieferungen folgen dem EU-Pfad (`K`), Dienstleistungen dem Drittlandpfad
 — und werden dort aus demselben Grund wie oben nicht automatisch eingeordnet.
-Steht am Kunden `ni_supply_type = "mixed"`, entscheidet die Position:
-`supply_type` schlägt die Kundenangabe.
+`supply_type` der Position schlägt immer die Kundenangabe `ni_supply_type`;
+fehlt er, gilt die Kundenangabe, und bei `mixed` bleibt die Position
+unbestimmt.
 
 ## Dokumentweite Steueraufstellung (BG-23)
 

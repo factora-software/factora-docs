@@ -60,7 +60,7 @@ Es gibt zwei Wege, Factora zu nutzen:
   Summen, Anhänge) mit Typ, Pflicht/Optional, Default und EN-16931-Bezug.
 - [Webhooks](webhooks.md) — Ereignistypen, Signaturprüfung, Zustellung &
   Wiederholungslogik.
-- [Exporte](exports.md) — DATEV-Export (Buchungsdaten).
+- [Exporte](exports.md) — DATEV-Export (Buchungsdaten), Rechnungsarchiv als ZIP.
 
 ## Konventionen in dieser Referenz
 

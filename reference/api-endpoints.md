@@ -45,6 +45,7 @@ maßgeblich**.
 | DELETE | `/mandanten/{id}/` | Mandant löschen (nur ohne Rechnungen/Kunden) | `mandanten:write` | — |
 | POST | `/mandanten/bulk/` | Bis zu 200 Mandanten anlegen (alles-oder-nichts) | `mandanten:write` | — |
 | GET | `/exports/datev/` | DATEV-Buchungsdaten als CSV | `exports:read` | — |
+| GET | `/exports/invoices/` | Rechnungsarchiv (PDF + XML) als ZIP mit Index und Manifest | `exports:read` | — |
 | GET | `/webhooks/` | Webhooks auflisten | `webhooks:read` | — |
 | POST | `/webhooks/` | Webhook anlegen | `webhooks:write` | — |
 | GET | `/webhooks/{id}/` | Webhook abrufen | `webhooks:read` | — |
@@ -98,7 +99,7 @@ Kunden pro Mandant getrennt geführt.
 
 ## Exporte
 
-`GET /exports/datev/` — siehe [Exporte](exports.md).
+`GET /exports/datev/` und `GET /exports/invoices/` — siehe [Exporte](exports.md).
 
 ## Webhooks
 
