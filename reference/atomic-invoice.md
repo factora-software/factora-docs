@@ -510,8 +510,6 @@ der Nummer statt am Schlüssel.
 5. GLN/GTIN, falls angegeben, müssen gültige GS1-Prüfziffern haben.
 6. Anhänge: `content_base64` XOR `external_url`.
 7. `prepaid_amount` (BT-113) muss ≤ Bruttobetrag sein, sonst 400.
-8. Zahlungsart Überweisung (`payment_means_code` 30 oder 58, Default 58)
-   braucht eine Verkäufer-IBAN (BT-84, BR-61), sonst 400 mit `bt=BT-84`.
 
 ## Bereits beglichene Belege
 
@@ -523,17 +521,11 @@ fällig. Empfohlene Kombination:
   BT-115 = `0.00` (kein offener Posten beim Empfänger-Import); das PDF
   zeigt „Bereits gezahlt" in der Summenübersicht und ersetzt Bankblock,
   Zahlungs-QR und Fälligkeitszeile durch einen Beglichen-Hinweis.
-- `payment_means_code` **nicht** `30`/`58`/`59` setzen — z. B. `1` (Instrument
+- `payment_means_code` **nicht** `58`/`59` setzen — z. B. `1` (Instrument
   not defined), `68` (Online payment service) oder `97` (Clearing between
-  partners). Bei `30` und `58` (Überweisung; `58` ist der Default) ist eine
-  Verkäufer-IBAN Pflicht (BT-84, BR-61 / CII-SR-470) — fehlt sie, antwortet
-  die API mit `400`, `code=business`, `bt=BT-84`,
-  `field=seller_snapshot.iban`, bevor ein Dokument entsteht. Gilt für
-  Atomic, Sandbox, Finalize, Entwurfs-Download (`/xml/cii/`, `/xml/ubl/`)
-  und `/convert/`.
+  partners). BR-DE-23-a erzwingt nur bei `58` eine IBAN (BG-17).
 - `iban`/`bic` im `seller_snapshot` weglassen, wenn kein Konto auf dem
-  Beleg erscheinen soll (Achtung: ohne `mandant_id` füllen Tenant-Stammdaten
-  Snapshot-Lücken — BG-17 entfällt nur, wenn beide keine IBAN tragen; mit
-  `mandant_id` zählt allein `seller_data`).
+  Beleg erscheinen soll (Achtung: Tenant-Stammdaten füllen Snapshot-Lücken —
+  BG-17 entfällt nur, wenn beide keine IBAN tragen).
 - Optional `payment_terms` mit eigenem Hinweistext (BT-20), sonst rendert
   das PDF den Standard-Beglichen-Hinweis.

@@ -10,7 +10,7 @@ Die Spalten **CII** und **UBL** zeigen, ob der Geschäftsbegriff in der jeweilig
 
 Abdeckung gesamt: **164 vollständig · 0 teilweise · 0 offen** (Summe 164).
 
-> Automatisch generiert aus apps/invoices/standards/en16931.py · Stand: 2026-08-07. Nicht von Hand bearbeiten — bei Änderungen docs/api/build_field_reference.py neu ausführen.
+> Automatisch generiert aus apps/invoices/standards/en16931.py · Stand: 2026-09-15. Nicht von Hand bearbeiten — bei Änderungen docs/api/build_field_reference.py neu ausführen.
 
 ## Dokumentenkopf
 
@@ -187,7 +187,7 @@ Abdeckung gesamt: **164 vollständig · 0 teilweise · 0 offen** (Summe 164).
 
 | BT | Feld (deutsch) | EN 16931 (englisch) | Pfad im Request | CII | UBL | Mapping-Hinweis |
 | --- | --- | --- | --- | --- | --- | --- |
-| BT-84 | IBAN | Payment account identifier (IBAN) | seller_snapshot.iban | ✓ | ✓ | tenant.iban / Snapshot |
+| BT-84 | IBAN | Payment account identifier (IBAN) | seller_snapshot.iban | ✓ | ✓ | Snapshot; ohne mandant_id füllt tenant.iban die Lücke. Pflicht bei BT-81 30/58 (BR-61), sonst 400 mit bt=BT-84 |
 | BT-85 | Kontoinhaber | Payment account name | invoice_header.payment_account_name | ✓ | ✓ | C6a: CII PayeePartyCreditorFinancialAccount/AccountName; UBL PayeeFinancialAccount/Name |
 | BT-86 | BIC | Payment service provider id (BIC) | seller_snapshot.bic | ✓ | ✓ | — |
 
