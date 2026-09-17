@@ -92,6 +92,15 @@ durch einen doppelten Namen, wird nichts angelegt; Antwort 409). Ein Mandant
 kann nicht gelöscht werden, solange Rechnungen oder Kunden an ihm hängen
 (409, GoBD).
 
+**Branding je Mandant** (Logo, Briefpapier, Farbe, Schrift, Fußtext und bis zu
+fünf **Fußzeilen-Logos**) wird in der Console gepflegt — die Bilddateien
+laufen nicht über die v1-API. Die Mandanten-Antwort trägt den Stand nur
+lesend: `logo` (URL oder `null`), `has_letterhead` und `footer_logos`
+(Liste aus `id`, `url`, `position` = `left`/`center`/`right`, `sort_order`,
+in Zeichenreihenfolge). Fußzeilen-Logos erscheinen auf jeder Rechnungsseite
+in der Fußzeile; der Fußtext rückt daneben oder darüber, ein Briefpapier mit
+eigener Fußzeile unterdrückt beides.
+
 ## Kunden
 
 Auflisten und Anlegen über `/customers/`. Auf dem Mandanten-Pfad werden
