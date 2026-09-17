@@ -54,8 +54,9 @@ den der Quickstart schon angelegt hat).
   **`fa_test_`** (Sandbox). Ältere Schlüssel (`fa_…`) authentifizieren
   weiterhin.
 - Sandbox-Schlüssel sind kostenlos und führen `POST /invoices/atomic/` als
-  Trockenlauf aus: volle Validierung, PDF + XML als Vorschau, nichts wird
-  gespeichert — siehe [Sandbox & Testing](../reference/sandbox.md).
+  Trockenlauf aus: volle Validierung, ein sichtbar entwertetes PDF als
+  Vorschau (kein XML), nichts wird gespeichert — siehe
+  [Sandbox & Testing](../reference/sandbox.md).
 - Der Klartext wird **genau einmal** angezeigt. Serverseitig liegt kein
   Klartext, nur ein SHA-256-Hash und ein HMAC. Geht der Schlüssel verloren,
   gibt es kein Recovery — neuen erstellen, alten deaktivieren.
@@ -207,7 +208,9 @@ Alle Antworten folgen derselben Hülle:
 
 Im Sandbox-Betrieb ist der Status `200`, `data.id` ist `null`,
 `data.status` ist `"sandbox"` und `meta.sandbox` ist `true` — es wird nichts
-gespeichert. Live ist der Status `201`.
+gespeichert. `data.pdf_base64` ist dann eine sichtbar entwertete Vorschau
+(Wasserzeichen), `data.xml_base64` ist immer `null`. Live ist der Status `201`
+mit PDF und XML.
 
 ## 5. Weitere Aufrufe
 

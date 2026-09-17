@@ -422,7 +422,9 @@ Frei verwendbares Objekt für weitere EN-16931-Felder. Werte aus dem Aufruf
 ## Antwort
 
 **Erfolg (Live):** HTTP `201`. **Sandbox:** HTTP `200` mit
-`meta.sandbox = true`.
+`meta.sandbox = true`, `data.id = null`, `data.status = "sandbox"`;
+`data.pdf_base64` ist dann eine sichtbar entwertete Vorschau (Wasserzeichen),
+`data.xml_base64` ist immer `null` — siehe [Sandbox & Testing](sandbox.md).
 
 ```json
 {
@@ -446,8 +448,8 @@ Frei verwendbares Objekt für weitere EN-16931-Felder. Werte aus dem Aufruf
 | `data.invoice_number` | string | übernommene Rechnungsnummer (BT-1) |
 | `data.status` | string | `final` (Live) bzw. Sandbox-Status |
 | `data.total` | string | Bruttobetrag |
-| `data.pdf_base64` | string | ZUGFeRD-PDF/A-3 (Base64) |
-| `data.xml_base64` | string | XRechnung-XML (Base64) |
+| `data.pdf_base64` | string | ZUGFeRD-PDF/A-3 (Base64); Sandbox: entwertete Vorschau mit Wasserzeichen |
+| `data.xml_base64` | string \| null | XRechnung-XML (Base64); Sandbox: immer `null` |
 
 Fehlerfälle und Fehlercodes: siehe [API-Überblick](api-overview.md#fehler--und-antwortstruktur).
 

@@ -2,9 +2,11 @@
 
 Sandbox-Schlüssel (`fa_test_…`) sind **dauerhaft kostenlos** und durchlaufen
 dieselbe Pipeline wie der Live-Betrieb (Validierung, PDF- und XML-Erzeugung) —
-**persistieren aber nichts**. Es gibt keinen zeitlich begrenzten Trial: Sie
-testen beliebig lange mit Sandbox-Schlüsseln und schalten den Live-Betrieb
-erst frei, wenn Sie eine Zahlungsmethode hinterlegen.
+**persistieren aber nichts**. Zurück kommt das Prüfergebnis plus ein
+**sichtbar entwertetes PDF** zur Ansicht; die XRechnung-XML gibt es nur mit
+einem Live-Schlüssel. Es gibt keinen zeitlich begrenzten Trial: Sie testen
+beliebig lange mit Sandbox-Schlüsseln und schalten den Live-Betrieb erst
+frei, wenn Sie eine Zahlungsmethode hinterlegen.
 
 Anlegen eines Sandbox-Schlüssels: siehe
 [API-Überblick](api-overview.md#api-schlüssel).
@@ -15,7 +17,7 @@ Sandbox-Schlüssel sind **nur** auf den persistenzfreien Endpunkten zugelassen:
 
 | Endpunkt | Verhalten mit Sandbox-Schlüssel |
 |---|---|
-| `POST /invoices/atomic/` | Trockenlauf: validiert und erzeugt PDF/XML, verwirft danach |
+| `POST /invoices/atomic/` | Trockenlauf: validiert, liefert das entwertete Vorschau-PDF, kein XML, speichert nichts |
 | `POST /invoices/preview/` | Summen-Vorschau (dezimalgenau, inkl. Positions-Nachlässe und -Zuschläge) |
 
 Alle anderen v1-Endpunkte lehnen Sandbox-Schlüssel mit **403** ab — sie würden
@@ -26,7 +28,13 @@ echte Kontodaten lesen oder schreiben.
 `POST /invoices/atomic/` mit einem Sandbox-Schlüssel:
 
 - läuft durch die **vollständige** Validierung (EN-16931-Geschäftsregeln,
-  KoSIT) und erzeugt **PDF und XML** als Base64 in der Antwort,
+  KoSIT) — das Urteil ist dasselbe wie im Live-Betrieb,
+- liefert in `data.pdf_base64` eine **sichtbar entwertete Vorschau**: jede
+  Seite trägt das Wasserzeichen „FACTORA SANDBOX — UNGÜLTIG" (bei englischer
+  Rechnungssprache „FACTORA SANDBOX — INVALID"), die eingebettete
+  XML ist maschinell ungültig. Das Wasserzeichen lässt sich nicht abschalten,
+- gibt **keine XRechnung-XML** aus — `data.xml_base64` ist immer `null`. Ein
+  maschinenlesbares Dokument gibt es nur mit einem Live-Schlüssel,
 - antwortet mit **HTTP 200** (Live erzeugt `201`),
 - setzt `meta.sandbox: true`,
 - **speichert nichts** — keine Rechnung, keinen Kunden, **keine
@@ -56,9 +64,11 @@ Antwort (gekürzt):
   "valid": true,
   "data": {
     "id": null,
+    "valid": true,
     "status": "sandbox",
+    "message": "Sandbox-Vorschau — validiert. pdf_base64 ist eine sichtbar entwertete Vorschau (Wasserzeichen); XML wird im Sandbox-Modus nicht ausgegeben.",
     "pdf_base64": "JVBERi0…",
-    "xml_base64": "PD94bWw…"
+    "xml_base64": null
   },
   "errors": [],
   "meta": { "sandbox": true }
@@ -70,6 +80,8 @@ Antwort (gekürzt):
 - **403 Forbidden** — Sandbox-Schlüssel auf einem nicht zugelassenen Endpunkt
   (alles außer `atomic` und `preview`).
 - Sandbox prüft **keine** Dubletten, da nichts gespeichert wird.
+- Das Sandbox-PDF ist eine Ansicht, kein Beleg: Wasserzeichen auf jeder
+  Seite, eingebettete XML ungültig — ein Empfänger-Validator lehnt es ab.
 - Für den Wechsel auf Live: in der Console eine Zahlungsmethode hinterlegen und
   einen **Live-Schlüssel** (`fa_live_…`) erstellen.
 

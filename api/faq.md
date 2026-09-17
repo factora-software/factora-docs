@@ -26,7 +26,12 @@ Nein — und es gibt auch keine Frist. Es existiert **kein zeitlich
 begrenzter Trial**. Nach der Registrierung stehen sofort **Sandbox-Keys**
 (`fa_test_…`) bereit, die **dauerhaft kostenlos** sind: `POST
 /api/v1/invoices/atomic/` läuft damit als Dry-Run durch dieselbe Pipeline
-(Validierung, PDF + XML), persistiert aber nichts (`sandbox: true`).
+(Validierung, Rendering), persistiert aber nichts (`sandbox: true`). Die
+Antwort enthält das Prüfergebnis und ein **sichtbar entwertetes PDF**
+(Wasserzeichen „FACTORA SANDBOX — UNGÜLTIG" bzw. „— INVALID" auf jeder
+Seite), damit Sie das
+Ergebnis beurteilen können; die XRechnung-XML gibt es erst mit einem
+Live-Schlüssel.
 
 Ein Zahlungsmittel wird erst für den **Live-Betrieb** hinterlegt
 (Console → Abrechnung). Damit wird die metered Stripe-Subscription aktiv
