@@ -6,7 +6,7 @@ _E-Rechnung (XRechnung / ZUGFeRD) per REST-API_
 
 Factora erzeugt EN-16931-konforme E-Rechnungen aus Ihrem ERP-, Warenwirtschafts- oder Abrechnungssystem über eine REST-API. Ausgabeformate: **XRechnung 3.0** (CII), **Peppol BIS 3.0** (UBL) und **ZUGFeRD** (PDF/A-3 mit eingebettetem XML). Alle 164 Felder der EN 16931 werden unterstützt (siehe separate Feld-Referenz).
 
-Der empfohlene Weg ist der **atomic-Endpoint**: ein einziger Request erstellt, validiert, finalisiert die Rechnung und liefert XML + PDF zurück. Wer mehr Kontrolle braucht, kann den Lebenszyklus auch über die granularen Endpoints steuern (Abschnitt 7).
+Der empfohlene Weg ist der **atomic-Endpoint**: ein einziger Request erstellt, validiert, finalisiert die Rechnung und liefert die E-Rechnung (XML) zurück — und, wenn in der Console unter Branding „Factora erstellt die Rechnung visuell“ an ist, zusätzlich das Factora-PDF. Wer mehr Kontrolle braucht, kann den Lebenszyklus auch über die granularen Endpoints steuern (Abschnitt 7).
 
 # 2. Authentifizierung
 
@@ -109,6 +109,8 @@ HTTP/1.1 201 Created
   "meta": {}
 }
 ```
+
+Das Beispiel zeigt ein Konto mit „Factora erstellt die Rechnung visuell“ = an. Ist die Einstellung aus (Standard für neue Konten), ist `pdf_base64` `null` und `data.invoice` enthält die geprüften Rechnungsfelder samt Positionen — daraus erzeugen Sie die Ansicht in Ihrer eigenen Vorlage. Rechtlich maßgeblich ist immer das XML; eine abweichende eigene Ansicht ändert daran nichts.
 
 Jede Antwort der API trägt dieselbe Hülle: `valid`, `data`, `errors`, `meta`. Die Nutzdaten liegen **immer** unter `data`, auch bei Erfolg — nie auf oberster Ebene.
 

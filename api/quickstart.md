@@ -210,7 +210,10 @@ Im Sandbox-Betrieb ist der Status `200`, `data.id` ist `null`,
 `data.status` ist `"sandbox"` und `meta.sandbox` ist `true` — es wird nichts
 gespeichert. `data.pdf_base64` ist dann eine sichtbar entwertete Vorschau
 (Wasserzeichen), `data.xml_base64` ist immer `null`. Live ist der Status `201`
-mit PDF und XML.
+mit dem XML — und dem Factora-PDF, wenn in der Console unter Branding
+„Factora erstellt die Rechnung visuell“ an ist. Ist es aus (Standard für neue
+Konten), ist `data.pdf_base64` `null` und `data.invoice` enthält die geprüften
+Rechnungsfelder für Ihre eigene Ansicht.
 
 ## 5. Weitere Aufrufe
 

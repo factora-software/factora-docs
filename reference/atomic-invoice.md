@@ -423,8 +423,41 @@ Frei verwendbares Objekt für weitere EN-16931-Felder. Werte aus dem Aufruf
 
 **Erfolg (Live):** HTTP `201`. **Sandbox:** HTTP `200` mit
 `meta.sandbox = true`, `data.id = null`, `data.status = "sandbox"`;
-`data.pdf_base64` ist dann eine sichtbar entwertete Vorschau (Wasserzeichen),
-`data.xml_base64` ist immer `null` — siehe [Sandbox & Testing](sandbox.md).
+`data.pdf_base64` ist dann eine sichtbar entwertete Vorschau (Wasserzeichen)
+bzw. `null` ohne Factora-PDF, `data.xml_base64` ist immer `null` — siehe
+[Sandbox & Testing](sandbox.md).
+
+### Factora-PDF oder eigene Ansicht
+
+Welche Dateien Sie bekommen, stellen Sie in der Console unter
+**Einstellungen → Branding → „Factora erstellt die Rechnung visuell“** ein:
+
+| Einstellung | `data.pdf_base64` | `data.invoice` | `data.xml_base64` |
+|---|---|---|---|
+| **aus** (Standard für neue Konten) | `null` | geprüfte Rechnungsfelder (wie `GET /invoices/{id}/`) | E-Rechnung |
+| **an** | ZUGFeRD-PDF mit Ihrem Branding | fehlt — Antwort wie bisher | E-Rechnung |
+
+Ist die Einstellung aus, prüft, entscheidet (Steuer), validiert (KoSIT),
+archiviert und berechnet Factora die Rechnung genauso — nur ein Factora-PDF
+entsteht nicht. Die Ansicht für den Käufer erzeugen Sie in Ihrer eigenen
+Vorlage aus `data.invoice`.
+
+**Rechtlich maßgeblich ist das XML.** Eine E-Rechnung ist das strukturierte
+Format nach EN 16931; ein PDF allein ist keine E-Rechnung. Übermitteln Sie
+Ihre eigene PDF-Ansicht zusammen mit dem XML, ist sie ein zusätzliches
+Dokument — weicht sie vom XML ab, gilt das XML. Alle Pflichtangaben müssen im
+XML stehen. Aufzubewahren ist mindestens das XML, unverändert (Factora
+archiviert es). Quellen:
+[BMF — FAQ E-Rechnung](https://www.bundesfinanzministerium.de/Content/DE/FAQ/e-rechnung.html)
+(Nr. 12a, 13),
+[BStBK — FAQ E-Rechnung](https://www.bstbk.de/downloads/bstbk/steuerrecht-und-rechnungslegung/fachinfos/BStBK_FAQ_E-Rechnung_final.pdf)
+(1.3).
+
+Maßgeblich ist die Einstellung **zum Zeitpunkt der Finalisierung**. Eine
+spätere Änderung wirkt nur auf neue Rechnungen: `GET /invoices/{id}/pdf/`
+einer ohne PDF finalisierten Rechnung antwortet mit `404` und Code
+`pdf_not_produced`; der Versand per E-Mail (`/send/`, `/dispatch/`) hängt dann
+nur das XML an.
 
 ```json
 {
@@ -448,8 +481,9 @@ Frei verwendbares Objekt für weitere EN-16931-Felder. Werte aus dem Aufruf
 | `data.invoice_number` | string | übernommene Rechnungsnummer (BT-1) |
 | `data.status` | string | `final` (Live) bzw. Sandbox-Status |
 | `data.total` | string | Bruttobetrag |
-| `data.pdf_base64` | string | ZUGFeRD-PDF/A-3 (Base64); Sandbox: entwertete Vorschau mit Wasserzeichen |
-| `data.xml_base64` | string \| null | XRechnung-XML (Base64); Sandbox: immer `null` |
+| `data.pdf_base64` | string \| null | ZUGFeRD-PDF/A-3 (Base64), nur mit „Factora erstellt die Rechnung visuell“, sonst `null`; Sandbox: entwertete Vorschau mit Wasserzeichen |
+| `data.invoice` | object | nur ohne Factora-PDF: geprüfte Rechnungsfelder inkl. Positionen (wie `GET /invoices/{id}/`) |
+| `data.xml_base64` | string \| null | XRechnung-XML (Base64) — die E-Rechnung; Sandbox: immer `null` |
 
 Fehlerfälle und Fehlercodes: siehe [API-Überblick](api-overview.md#fehler--und-antwortstruktur).
 

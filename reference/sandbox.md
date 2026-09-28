@@ -29,7 +29,10 @@ echte Kontodaten lesen oder schreiben.
 
 - läuft durch die **vollständige** Validierung (EN-16931-Geschäftsregeln,
   KoSIT) — das Urteil ist dasselbe wie im Live-Betrieb,
-- liefert in `data.pdf_base64` eine **sichtbar entwertete Vorschau**: jede
+- liefert ohne Factora-PDF (Console → Branding → „Factora erstellt die
+  Rechnung visuell“ aus) die **geprüften Rechnungsfelder** in `data.invoice`
+  (`id` ist `null`) und `data.pdf_base64 = null`,
+- liefert mit Factora-PDF in `data.pdf_base64` eine **sichtbar entwertete Vorschau**: jede
   Seite trägt das Wasserzeichen „FACTORA SANDBOX — UNGÜLTIG" (bei englischer
   Rechnungssprache „FACTORA SANDBOX — INVALID"), die eingebettete
   XML ist maschinell ungültig. Das Wasserzeichen lässt sich nicht abschalten,
