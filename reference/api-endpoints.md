@@ -44,6 +44,13 @@ maßgeblich**.
 | PATCH | `/mandanten/{id}/` | Mandant ändern (partiell) | `mandanten:write` | — |
 | DELETE | `/mandanten/{id}/` | Mandant löschen (nur ohne Rechnungen/Kunden) | `mandanten:write` | — |
 | POST | `/mandanten/bulk/` | Bis zu 200 Mandanten anlegen (alles-oder-nichts) | `mandanten:write` | — |
+| POST | `/mandanten/{id}/logo/` | Kopf-Logo hochladen (multipart `logo`) | `mandanten:write` | — |
+| DELETE | `/mandanten/{id}/logo/` | Kopf-Logo entfernen | `mandanten:write` | — |
+| POST | `/mandanten/{id}/letterhead/` | Briefpapier-PDF hochladen (multipart `letterhead`) | `mandanten:write` | — |
+| DELETE | `/mandanten/{id}/letterhead/` | Briefpapier entfernen | `mandanten:write` | — |
+| POST | `/mandanten/{id}/footer-logos/` | Fußzeilen-Logo hinzufügen (multipart `image`, `position`) | `mandanten:write` | — |
+| PATCH | `/mandanten/{id}/footer-logos/{logo_id}/` | Fußzeilen-Logo verschieben (`position`, `sort_order`) | `mandanten:write` | — |
+| DELETE | `/mandanten/{id}/footer-logos/{logo_id}/` | Fußzeilen-Logo entfernen | `mandanten:write` | — |
 | GET | `/exports/datev/` | DATEV-Buchungsdaten als CSV | `exports:read` | — |
 | GET | `/exports/invoices/` | Rechnungsarchiv (PDF + XML) als ZIP mit Index und Manifest | `exports:read` | — |
 | GET | `/webhooks/` | Webhooks auflisten | `webhooks:read` | — |
@@ -93,13 +100,39 @@ kann nicht gelöscht werden, solange Rechnungen oder Kunden an ihm hängen
 (409, GoBD).
 
 **Branding je Mandant** (Logo, Briefpapier, Farbe, Schrift, Fußtext und bis zu
-fünf **Fußzeilen-Logos**) wird in der Console gepflegt — die Bilddateien
-laufen nicht über die v1-API. Die Mandanten-Antwort trägt den Stand nur
-lesend: `logo` (URL oder `null`), `has_letterhead` und `footer_logos`
-(Liste aus `id`, `url`, `position` = `left`/`center`/`right`, `sort_order`,
-in Zeichenreihenfolge). Fußzeilen-Logos erscheinen auf jeder Rechnungsseite
-in der Fußzeile; der Fußtext rückt daneben oder darüber, ein Briefpapier mit
-eigener Fußzeile unterdrückt beides.
+fünf **Fußzeilen-Logos**) lässt sich vollständig über die API pflegen — oder
+von Hand in der Console; beide Wege prüfen dieselben Regeln. Farbe
+(`primary_color`), Schrift (`font_choice`: `helvetica`, `times`, `courier`),
+`logo_position`, `footer_text` und die Briefpapier-Einstellungen setzt
+`PATCH /mandanten/{id}/`. Die Dateien laufen als `multipart/form-data` über
+eigene Unterpfade:
+
+```bash
+curl -X POST https://console.factora.software/api/v1/mandanten/42/logo/ \
+  -H "Authorization: Bearer $FACTORA_API_KEY" \
+  -F "logo=@logo.png"
+```
+
+- `logo/` — Feld `logo`, lesbare Bilddatei (PNG, JPEG, …) bis 5 MB; ersetzt
+  ein vorhandenes Logo. `DELETE` entfernt es.
+- `letterhead/` — Feld `letterhead`, PDF bis 5 MB. `DELETE` entfernt es.
+- `footer-logos/` — Feld `image` (wie beim Logo), optional `position`
+  (`left`/`center`/`right`, Standard `left`); höchstens fünf je Mandant.
+  `PATCH …/footer-logos/{logo_id}/` ändert `position`/`sort_order`,
+  `DELETE` entfernt ein Logo.
+
+Jede Antwort ist der vollständige Mandant. Eine Datei, die keine lesbare
+Bilddatei bzw. kein PDF ist oder zu groß ist, wird mit 400 abgelehnt (das
+vorhandene Logo bleibt dann unverändert). Branding setzt einen Tarif mit
+Branding voraus (sonst 403); Sandbox-Schlüssel sind für diese Pfade nicht
+zugelassen. Das Logo erscheint nur auf Rechnungen, die mit `mandant_id`
+erzeugt werden — ein Mandant ohne eigenes Logo zeigt keines.
+
+Die Mandanten-Antwort trägt den Stand lesend: `logo` (URL oder `null`),
+`has_letterhead` und `footer_logos` (Liste aus `id`, `url`, `position`,
+`sort_order`, in Zeichenreihenfolge). Fußzeilen-Logos erscheinen auf jeder
+Rechnungsseite in der Fußzeile; der Fußtext rückt daneben oder darüber, ein
+Briefpapier mit eigener Fußzeile unterdrückt beides.
 
 ## Kunden
 
