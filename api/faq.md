@@ -63,8 +63,8 @@ Es gibt **einen** nutzungsbasierten API-Tarif — keine feste Preis-Leiter
 | Plattform-Gebühr | **49 €/Monat** netto |
 | 1–250 Live-Rechnungen/Monat | **0 €** (in Plattform-Gebühr enthalten) |
 | 251–1.000 | **0,12 €** / Rechnung |
-| 1.001–5.000 | **0,07 €** / Rechnung |
-| ab 5.001 | **0,04 €** / Rechnung |
+| ab 1.001 | **0,07 €** / Rechnung |
+| ab 5.001, nur mit Jahresvertrag (Mindestabnahme) | **0,04 €** / Rechnung |
 | Sandbox-Keys | kostenlos |
 
 Sandbox-Keys sind kostenlos zum Entwickeln und Testen; die Staffel ist
