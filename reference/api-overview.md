@@ -184,12 +184,18 @@ Die Felder der Hülle:
 
 Das **Fehlerobjekt** enthält `code`, `severity` und `message` immer, die
 übrigen Felder je nach Fehlerart: `field` (Eingabepfad), `rule`
-(EN-16931-/Geschäftsregel), `bt` (Geschäftsbegriff) und `location` (XPath bei
-XML-Befunden).
+(EN-16931-/Geschäftsregel), `bt` (Geschäftsbegriff), `location` (XPath bei
+XML-Befunden) und `hint` (ein Satz, was zu tun ist).
 
-**Validierungsbefunde** (`code: "kosit"` oder `"business"`) führen `rule`, `bt`
-und `location` **immer** — `null`, wenn der Prüfbericht sie nicht benennt (etwa
-bei reinen Schema-Fehlern). Ein Client kann diese Schlüssel dort also ohne
+**Validierungsbefunde** (`code: "kosit"` oder `"business"`) führen `field`,
+`rule`, `bt`, `location` und `hint` **immer** — `null`, wo nichts zuzuordnen
+ist. `field` kommt aus dem Befund; bei `POST /invoices/atomic/` sonst aus seinem
+Geschäftsbegriff (z. B. `BT-10` → `invoice_header.buyer_reference`;
+Positionsfelder als `items[].…`). Andere Endpunkte (etwa `/convert/`) leiten
+kein Feld ab, weil ihr Request anders aufgebaut ist. Einen
+Hinweis gibt es nur, wo Factora ihn sicher kennt — sonst `null`, nie geraten.
+Bei Schema-Fehlern der Eingabe steht `hint`, sobald das Feld zu einem bekannten
+Pflichtfeld gehört. Ein Client kann diese Schlüssel dort also ohne
 Existenzprüfung auslesen. Bei allen anderen Fehlerarten (Authentifizierung,
 Kontingent, Schema-Validierung der Eingabe) fehlen sie weiterhin ganz.
 

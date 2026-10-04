@@ -129,18 +129,22 @@ HTTP/1.1 400 Bad Request
       "code": "schema",
       "severity": "error",
       "message": "Dieses Feld ist für das Profil XRechnung erforderlich.",
-      "field": "seller_snapshot.contact.phone"
+      "field": "seller_snapshot.contact.phone",
+      "hint": "Telefonnummer des Ansprechpartners beim Verkäufer angeben – unter Profil xrechnung Pflicht (BR-DE-6)."
     },
     {
       "code": "schema",
       "severity": "error",
       "message": "Dieses Feld ist für das Profil XRechnung erforderlich.",
-      "field": "seller_snapshot.contact.email"
+      "field": "seller_snapshot.contact.email",
+      "hint": "E-Mail-Adresse des Ansprechpartners beim Verkäufer angeben – unter Profil xrechnung Pflicht (BR-DE-7)."
     }
   ],
   "meta": {}
 }
 ```
+
+`field` nennt die Stelle in Ihrem Request, `hint` sagt in einem Satz, was zu tun ist. Kennt Factora für einen Fehler keinen Hinweis, fehlt `hint` — bei Prüfbefunden (`kosit`, `business`) steht dann `null`.
 
 Welche Felder das Profil hochzieht, steht vollständig unter *Profilabhängige Pflichtfelder* in der Feld-Referenz (`docs/reference/atomic-invoice.md`).
 
