@@ -25,6 +25,7 @@ maßgeblich**.
 | POST | `/invoices/atomic/` | Rechnung in einem Aufruf erstellen, finalisieren, PDF+XML zurückgeben | `invoices:write` | ✓ |
 | POST | `/invoices/preview/` | Summen live berechnen (ohne Speicherung) | `invoices:read` | ✓ |
 | POST | `/invoices/convert/` | EN-16931-JSON → geprüftes XML (ohne Speicherung) | `invoices:write` | ✓ |
+| POST | `/e-invoice-obligation/check/` | Prüfen, ob ein Vorgang in DE eine E-Rechnung sein muss (ohne Speicherung, nicht abgerechnet) | `invoices:read` | ✓ |
 | GET | `/invoices/` | Rechnungen auflisten (paginiert, filterbar) | `invoices:read` | — |
 | POST | `/invoices/` | Rechnung als Entwurf anlegen | `invoices:write` | — |
 | GET | `/invoices/{id}/` | Einzelne Rechnung abrufen | `invoices:read` | — |
@@ -82,6 +83,56 @@ und bei inaktivem Abo nutzbar.
 Rendert EN-16931-Rechnungsdaten ohne Speicherung in geprüftes XML
 (CII/XRechnung oder UBL, je nach Rechnungstyp) und gibt KoSIT-Befunde zurück.
 Ideal, um die eigene Datenabbildung zu testen.
+
+### E-Rechnungspflicht prüfen — `POST /e-invoice-obligation/check/`
+
+Beantwortet **vor** der Rechnungserstellung, ob ein Vorgang in Deutschland
+eine E-Rechnung sein muss (§ 14 Abs. 2 UStG, Ausnahmen nach §§ 33, 34, 34a
+UStDV, Übergang nach § 27 Abs. 38 UStG). Ihr System liefert die Fakten,
+Factora liefert das Urteil. Es wird nichts angelegt, nichts gespeichert und
+nichts abgerechnet.
+
+```json
+{
+  "seller":   {"established_in_de": true, "small_business": false, "prior_year_turnover_over_800k": true},
+  "buyer":    {"is_business": true, "established_in_de": true},
+  "document": {"transmission_date": "2027-03-02", "supply_date": "2027-02-28",
+               "gross_total": "1190.00", "currency": "EUR", "passenger_ticket": false},
+  "lines":    [{"tax_category": "S"}, {"tax_category": "E", "ustg_section_4_number": "8"}]
+}
+```
+
+| Feld | Pflicht | Bedeutung |
+|---|---|---|
+| `seller.established_in_de` | ja, `null` erlaubt | Sitz, Geschäftsleitung oder beteiligte Betriebsstätte im Inland. Das Adressland allein ist **keine** Ansässigkeit. |
+| `seller.small_business` | ja | Kleinunternehmer nach § 19 UStG |
+| `seller.prior_year_turnover_over_800k` | nein | nur für Umsätze 2027 nötig (Gesamtumsatz im Vorjahr > 800.000 €) |
+| `buyer.is_business` | ja, `null` erlaubt | Empfänger bezieht die Leistung als Unternehmer für sein Unternehmen |
+| `buyer.established_in_de` | ja, `null` erlaubt | wie beim Verkäufer |
+| `document.transmission_date` | ja | Tag, an dem die Rechnung an den Empfänger übermittelt wird. Die Übergangsfristen hängen an der Übermittlung, nicht am Rechnungsdatum. |
+| `document.supply_date` | ja, `null` erlaubt | Leistungsdatum; bei Abschlagsrechnungen das der künftigen Leistung. Das Rechnungsdatum ersetzt es nicht. |
+| `document.passenger_ticket` | nein | Fahrausweis für die Personenbeförderung |
+| `lines[].tax_category` | ja | `S`, `Z`, `E`, `AE`, `K`, `G`, `O` oder `UNDETERMINED`, solange die Kategorie noch nicht entschieden ist |
+| `lines[].ustg_section_4_number` | bei `E` | Nummer des § 4 UStG (`8`, `9a`, `11` …). Nur Nr. 8–29 sind von der Pflicht ausgenommen. |
+
+`null` heißt „nicht bekannt“. Das Ergebnis ist dann `undetermined` mit
+Begründung — Factora rät nicht. Ein fehlender Pflichtschlüssel ergibt `400`.
+
+**Antwort** (`data`):
+
+| Feld | Werte |
+|---|---|
+| `required` | `yes` · `no` · `undetermined` |
+| `reasons` | Liste aus `{code, message}`, z. B. `DOMESTIC_B2B`, `SMALL_AMOUNT`, `TRANSITION_UNTIL_2026`, `BUYER_TYPE_UNKNOWN` |
+| `consent_needed_if_e_invoice` | `true`: eine E-Rechnung braucht die Zustimmung des Empfängers · `false`: ohne Zustimmung zulässig · `null`: offen |
+| `basis` | Rechtsstand, auf dem die Antwort beruht |
+
+`no` heißt „keine Pflicht“, nicht „verboten“: Zwischen zwei inländischen
+Unternehmern ist eine E-Rechnung immer zulässig.
+
+Nicht abgedeckt: Vorgaben für Rechnungen an öffentliche Auftraggeber
+(E-Rechnungsverordnung des Bundes, Landesrecht). Sie gelten unabhängig von
+§ 14 UStG; ein `no` sagt darüber nichts.
 
 ### Klassischer Lebenszyklus
 
