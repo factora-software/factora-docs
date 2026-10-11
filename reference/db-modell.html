@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Factora DB-Modell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: Prozessband oben, darunter fünf Spalten Tabellen entlang des Rechnungswegs */
+:root{
+  --bg:#f4f1ea;--card:#fbfaf6;--soft:#ebe7dc;--line:#cfc9bb;--fg:#121211;--muted:#6f6b62;--signal:#ff4d00;
+  --display:"Bebas Neue",Impact,"Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans",system-ui,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141412;--card:#1b1b18;--soft:#22221e;--line:#3a3833;--fg:#ede9df;--muted:#9c978b;--signal:#ff6a26;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141412;--card:#1b1b18;--soft:#22221e;--line:#3a3833;--fg:#ede9df;--muted:#9c978b;--signal:#ff6a26;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 var(--body)}
+main{max-width:1560px;margin:0 auto;padding-block:28px 56px;padding-inline:16px}
+h1{font:400 40px/1 var(--display);letter-spacing:.02em;margin:0 0 6px}
+.sub{color:var(--muted);margin:0 0 18px;max-width:80ch}
+.sub code{font-family:var(--mono);font-size:12px}
+.legend{display:flex;gap:20px;flex-wrap:wrap;color:var(--muted);margin-bottom:22px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.flow{display:flex;align-items:stretch;margin-bottom:28px;overflow-x:auto}
+.step{flex:1;min-width:160px;border:1px solid var(--line);padding:10px 12px;background:var(--soft);border-radius:2px}
+.step b{display:block;font:400 18px/1.1 var(--display);letter-spacing:.04em}
+.step small{color:var(--muted)}
+.step.core{border:2px solid var(--fg);background:var(--card);box-shadow:3px 3px 0 var(--fg)}
+.arrow{align-self:center;padding:0 6px;color:var(--muted);font-size:18px}
+.cols{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px;align-items:start}
+@media (max-width:1150px){.cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.cols{grid-template-columns:1fr}}
+.col{min-width:0}
+.col h2{font:400 20px/1 var(--display);letter-spacing:.05em;margin:0 0 10px;padding-bottom:6px;border-bottom:2px solid var(--fg)}
+.t{border:1px solid var(--line);background:var(--card);margin-bottom:12px;border-radius:2px}
+.t.core{border:2px solid var(--fg);box-shadow:4px 4px 0 var(--fg)}
+.t.calc{border-style:dashed;background:transparent}
+.t header{padding:8px 10px;border-bottom:1px solid var(--line);background:var(--soft)}
+.t.calc header{background:transparent}
+.t header b{font-family:var(--mono);font-weight:500;font-size:12.5px}
+.t header div{color:var(--muted);font-size:11.5px}
+.rel{font-size:11.5px;color:var(--muted);padding:6px 10px;border-bottom:1px dashed var(--line)}
+.t ul{list-style:none;margin:0;padding:6px 10px 8px}
+.t li{display:flex;justify-content:space-between;gap:8px;padding:1px 0}
+.t li code{font-family:var(--mono);font-size:11.5px;min-width:0;overflow-wrap:anywhere}
+.t li i{font-style:normal;color:var(--muted);font-size:11px;white-space:nowrap;font-family:var(--mono)}
+.t li.grp{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-top:7px;font-weight:600}
+.de{display:inline-block;border:1px solid var(--signal);color:var(--signal);font:600 9px/1.3 var(--body);padding:0 3px;border-radius:2px;margin-left:4px;vertical-align:1px;letter-spacing:.04em}
+.foot{margin-top:24px;color:var(--muted);font-size:12px;max-width:90ch}
+</style>
+</head>
+<body>
+
+<main>
+<h1>Factora DB-Modell</h1>
+<p class="sub">Stand Code 08.10.2026 · Django-Models aus <code>apps/invoices</code>, <code>customers</code>, <code>users</code>, <code>api</code>, <code>transport</code>, <code>webhooks</code>. Gezeigt sind die fachlich tragenden Felder, nicht jede Spalte (Branding, Stripe, Bank-Felder am Mandanten sind weggelassen).</p>
+
+<div class="legend">
+  <span><span class="de">DE</span> deutsches Pflicht-/Sonderfeld (UStG, Leitweg, GoBD)</span>
+  <span><i style="font-family:var(--mono);font-style:normal">BT-xx</i> = EN-16931-Feld laut help_text im Code</span>
+  <span><i style="font-family:var(--mono);font-style:normal">BT-xx*</i> = meine Zuordnung, nicht im Code hinterlegt</span>
+  <span>1:n = ein Datensatz links, viele rechts</span>
+</div>
+
+<div class="flow">
+  <div class="step"><b>1 Stammdaten</b><small>Verkäufer, Integrator, Kunde</small></div><div class="arrow">→</div>
+  <div class="step"><b>2 API &amp; Steuerregeln</b><small>Key, Idempotenz, Rechtsgrundlagen</small></div><div class="arrow">→</div>
+  <div class="step core"><b>3 Rechnung</b><small>Kopf, Positionen, Zu-/Abschläge</small></div><div class="arrow">→</div>
+  <div class="step"><b>4 Prüfung &amp; Archiv</b><small>KoSIT, Audit, GoBD</small></div><div class="arrow">→</div>
+  <div class="step"><b>5 Versand &amp; Ereignisse</b><small>Peppol, Webhooks, Export</small></div>
+</div>
+
+<div class="cols">
+
+<!-- 1 Stammdaten -->
+<section class="col">
+<h2>1 · Stammdaten</h2>
+<div class="t"><header><b>tenants</b><div>Verkäufer-Konto (BG-4)</div></header>
+<ul>
+<li><code>company_name</code><i>BT-27*</i></li>
+<li><code>street / zip_code / city</code><i>BT-35/38/37*</i></li>
+<li><code>country</code><i>BT-40*</i></li>
+<li><code>vat_id</code><i>BT-31*</i></li>
+<li><code>tax_id<span class="de">DE</span></code><i>BT-32* Steuernr.</i></li>
+<li><code>registry_court / _number<span class="de">DE</span></code><i>BT-30*</i></li>
+<li><code>gln</code><i>BT-29*</i></li>
+<li><code>peppol_participant_id / _scheme</code><i>BT-34*</i></li>
+<li><code>tax_representative</code><i>BG-11 JSON</i></li>
+<li><code>vat_profile<span class="de">DE</span></code><i>§19 / standard</i></li>
+<li><code>default_tax_legal_reference</code><i>→ Rechtsgr.</i></li>
+<li><code>is_test</code></li>
+</ul></div>
+<div class="t"><header><b>integrators</b><div>API-Kunde (Console)</div></header>
+<div class="rel">tenant 1:1</div>
+<ul><li><code>company_name</code></li><li><code>mandanten_enabled</code></li><li><code>factora_renders_pdf</code></li><li><code>max_keys</code></li></ul></div>
+<div class="t"><header><b>integrator_mandanten</b><div>Endkunde des Integrators</div></header>
+<div class="rel">integrator 1:n</div>
+<ul><li><code>name</code></li><li><code>external_ref</code><i>ERP-Nr.</i></li><li><code>logo / letterhead / footer_text</code></li><li><code>is_active</code></li></ul></div>
+<div class="t"><header><b>customers</b><div>Käufer (BG-7)</div></header>
+<div class="rel">tenant 1:n · mandant 1:n</div>
+<ul>
+<li><code>customer_number</code><i>BT-46*</i></li>
+<li><code>customer_type</code><i>B2B / B2C / B2G</i></li>
+<li><code>company_name / first_ / last_name</code><i>BT-44*</i></li>
+<li><code>street / zip_code / city</code><i>BT-50/53/52*</i></li>
+<li><code>country</code><i>BT-55*</i></li>
+<li><code>vat_id</code><i>BT-48*</i></li>
+<li><code>vat_id_status / _checked_at</code><i>VIES</i></li>
+<li><code>leitweg_id<span class="de">DE</span></code><i>BT-10*</i></li>
+<li><code>registration_number</code><i>BT-47*</i></li>
+<li><code>gln</code><i>BT-46*</i></li>
+<li><code>peppol_participant_id / _scheme</code><i>BT-49*</i></li>
+<li><code>ni_supply_type</code></li>
+<li><code>default_tax_legal_reference</code><i>→ Rechtsgr.</i></li>
+<li><code>payment_terms_days</code></li>
+</ul></div>
+</section>
+
+<!-- 2 API & Steuerregeln -->
+<section class="col">
+<h2>2 · API &amp; Steuerregeln</h2>
+<div class="t"><header><b>api_keys</b><div>Bearer-Key (SHA-256-Hash)</div></header>
+<div class="rel">tenant 1:n · integrator 1:n</div>
+<ul><li><code>key_prefix</code></li><li><code>key_hash / key_hmac</code></li><li><code>environment</code><i>sandbox / live</i></li><li><code>scopes / allowed_ips</code><i>JSON</i></li><li><code>default_extended_fields</code><i>JSON</i></li><li><code>expires_at / last_used_at</code></li></ul></div>
+<div class="t"><header><b>idempotency_keys</b><div>Wiederholschutz</div></header>
+<div class="rel">api_key 1:n</div>
+<ul><li><code>key</code><i>UUID</i></li><li><code>request_hash</code></li><li><code>status_code / response_body</code></li></ul></div>
+<div class="t"><header><b>api_request_logs</b><div>Aufrufprotokoll</div></header>
+<div class="rel">tenant · api_key · mandant 1:n</div>
+<ul><li><code>method / path</code></li><li><code>status_code / duration_ms</code></li><li><code>error_detail</code><i>JSON</i></li></ul></div>
+<div class="t"><header><b>invoice_tax_legal_references</b><div>Rechtsgrundlagen (§-Katalog)</div></header>
+<ul>
+<li><code>code / label</code></li>
+<li><code>statute<span class="de">DE</span></code><i>z. B. §13b UStG</i></li>
+<li><code>tax_category_code</code><i>BT-151</i></li>
+<li><code>exemption_reason_text / _en</code><i>BT-120</i></li>
+<li><code>exemption_reason_code</code><i>BT-121 VATEX</i></li>
+<li><code>default_vat_rate</code></li>
+<li><code>source_url / source_checked_at</code></li>
+<li><code>is_active</code></li>
+</ul></div>
+<div class="t"><header><b>invoice_tax_country_rates</b><div>USt-Sätze je Land</div></header>
+<ul><li><code>country</code></li><li><code>rate_type / rate</code></li><li><code>valid_from</code></li></ul></div>
+</section>
+
+<!-- 3 Rechnung -->
+<section class="col">
+<h2>3 · Rechnung</h2>
+<div class="t core"><header><b>invoices</b><div>eine Rechnung; finalisiert = unveränderlich (GoBD)</div></header>
+<div class="rel">tenant · mandant · customer 1:n · parent_invoice → self</div>
+<ul>
+<li class="grp">Dokument</li>
+<li><code>invoice_number</code><i>BT-1*</i></li>
+<li><code>invoice_date</code><i>BT-2*</i></li>
+<li><code>invoice_type</code><i>→ BT-3 (380/386/389…)</i></li>
+<li><code>currency_code</code><i>BT-5</i></li>
+<li><code>vat_accounting_currency</code><i>BT-6</i></li>
+<li><code>tax_point_date / _code</code><i>BT-7/8</i></li>
+<li><code>due_date</code><i>BT-9*</i></li>
+<li><code>profile / customization_id</code><i>BT-24</i></li>
+<li><code>format</code><i>xrechnung / zugferd</i></li>
+<li><code>language</code><i>de / en</i></li>
+<li class="grp">Referenzen</li>
+<li><code>leitweg_id<span class="de">DE</span> / buyer_reference</code><i>BT-10*</i></li>
+<li><code>project_reference</code><i>BT-11</i></li>
+<li><code>contract_reference</code><i>BT-12</i></li>
+<li><code>order_reference</code><i>BT-13</i></li>
+<li><code>sales_order_reference</code><i>BT-14</i></li>
+<li><code>receiving_advice_reference</code><i>BT-15</i></li>
+<li><code>tender_lot_reference</code><i>BT-17</i></li>
+<li><code>invoiced_object_id</code><i>BT-18</i></li>
+<li><code>accounting_cost_code</code><i>BT-19</i></li>
+<li><code>note_subject_code / notes</code><i>BT-21/22</i></li>
+<li class="grp">Parteien (eingefroren)</li>
+<li><code>seller_snapshot</code><i>BG-4 JSON</i></li>
+<li><code>buyer_snapshot / customer_snapshot</code><i>BG-7 JSON</i></li>
+<li><code>seller_vat_profile<span class="de">DE</span></code><i>nie leer</i></li>
+<li><code>payee_name / _identifier / _legal_id</code><i>BT-59/60/61</i></li>
+<li class="grp">Lieferung</li>
+<li><code>shipping_snapshot</code><i>BG-13 JSON</i></li>
+<li><code>ship_to_gln / ship_to_id</code><i>BT-71*</i></li>
+<li><code>delivery_date</code><i>BT-72</i></li>
+<li><code>billing_start / _end_date</code><i>BT-73/74*</i></li>
+<li><code>delivery_note_id</code></li>
+<li><code>delivery_proof_*<span class="de">DE</span></code><i>§17a UStDV</i></li>
+<li class="grp">Zahlung</li>
+<li><code>payment_terms</code><i>BT-20*</i></li>
+<li><code>payment_means_code / _text</code><i>BT-81/82</i></li>
+<li><code>remittance_information</code><i>BT-83</i></li>
+<li><code>payment_account_name</code><i>BT-85</i></li>
+<li><code>card_pan / card_holder</code><i>BT-87/88</i></li>
+<li><code>mandate_reference</code><i>BT-89</i></li>
+<li><code>creditor_reference</code><i>BT-90</i></li>
+<li><code>debited_account</code><i>BT-91</i></li>
+<li class="grp">Beträge</li>
+<li><code>subtotal</code><i>BT-109*</i></li>
+<li><code>tax_amount</code><i>BT-110</i></li>
+<li><code>tax_amount_accounting</code><i>BT-111</i></li>
+<li><code>total</code><i>BT-112*</i></li>
+<li><code>prepaid_amount / snapshot_prepaid_amount</code><i>BT-113</i></li>
+<li><code>rounding_amount</code><i>BT-114</i></li>
+<li><code>(due_amount, berechnet)</code><i>BT-115</i></li>
+<li><code>exchange_rate</code></li>
+<li class="grp">Status &amp; GoBD</li>
+<li><code>status</code><i>draft → final → sent → paid</i></li>
+<li><code>is_konform</code></li>
+<li><code>original_format / original_sha256<span class="de">DE</span></code><i>set-once</i></li>
+<li><code>archive_status / archive_hash</code></li>
+<li><code>retention_notice_required<span class="de">DE</span></code><i>§14b UStG</i></li>
+<li><code>xml_file / pdf_file / attachments</code></li>
+<li><code>extended_fields</code><i>Handel, JSON</i></li>
+<li><code>created_via_api / meter_reported_at</code><i>Abrechnung</i></li>
+</ul></div>
+<div class="t"><header><b>invoice_items</b><div>Positionen (BG-25)</div></header>
+<div class="rel">invoice 1:n · product n:1</div>
+<ul>
+<li><code>position</code><i>BT-126*</i></li>
+<li><code>line_note</code><i>BT-127</i></li>
+<li><code>object_identifier</code><i>BT-128</i></li>
+<li><code>quantity / unit</code><i>BT-129/130*</i></li>
+<li><code>line_total</code><i>BT-131*</i></li>
+<li><code>order_line_reference</code><i>BT-132</i></li>
+<li><code>line_accounting_cost</code><i>BT-133</i></li>
+<li><code>period_start / _end</code><i>BT-134/135</i></li>
+<li><code>discount_amount … _reason_code</code><i>BT-136–140</i></li>
+<li><code>charge_amount … _reason_code</code><i>BT-141–145</i></li>
+<li><code>unit_price</code><i>BT-146*</i></li>
+<li><code>price_discount / gross_price</code><i>BT-147/148</i></li>
+<li><code>price_base_quantity / _unit</code><i>BT-149/150</i></li>
+<li><code>tax_category_code</code><i>BT-151</i></li>
+<li><code>vat_rate</code><i>BT-152*</i></li>
+<li><code>tax_exemption_reason_text / _code</code><i>BT-120/121</i></li>
+<li><code>tax_source</code><i>Herkunft Kategorie</i></li>
+<li><code>supply_type</code><i>Ware / Leistung</i></li>
+<li><code>description</code><i>BT-153*</i></li>
+<li><code>item_description</code><i>BT-154</i></li>
+<li><code>sku</code><i>BT-155*</i></li>
+<li><code>buyer_item_id</code><i>BT-156</i></li>
+<li><code>gtin</code><i>BT-157*</i></li>
+<li><code>classification_code / _scheme</code><i>BT-158</i></li>
+<li><code>country_of_origin</code><i>BT-159</i></li>
+<li><code>attribute_name / _value</code><i>BT-160/161</i></li>
+</ul></div>
+<div class="t"><header><b>invoice_header_charges</b><div>Zu-/Abschläge Belegebene (BG-20/21)</div></header>
+<div class="rel">invoice 1:n</div>
+<ul><li><code>is_charge</code><i>BG-21 / BG-20</i></li><li><code>amount</code><i>BT-92/99</i></li><li><code>base_amount</code><i>BT-93/100</i></li><li><code>percentage</code><i>BT-94/101</i></li><li><code>vat_category_code</code><i>BT-95/102</i></li><li><code>vat_rate</code><i>BT-96/103</i></li><li><code>reason_text</code><i>BT-97/104</i></li><li><code>reason_code</code><i>BT-98/105*</i></li><li><code>tax_exemption_reason_*</code><i>BT-120/121</i></li></ul></div>
+<div class="t calc"><header><b>USt-Aufschlüsselung (BG-23)</b><div>keine Tabelle, wird berechnet</div></header>
+<div class="rel">documents/vat_breakdown.py aus items + header_charges</div>
+<ul><li><code>Kategorie / Satz</code><i>BT-118/119</i></li><li><code>Bemessungsgrundlage</code><i>BT-116</i></li><li><code>Steuerbetrag</code><i>BT-117</i></li></ul></div>
+</section>
+
+<!-- 4 Prüfung & Archiv -->
+<section class="col">
+<h2>4 · Prüfung &amp; Archiv</h2>
+<div class="t"><header><b>invoice_validations</b><div>KoSIT-Prüfergebnis</div></header>
+<div class="rel">invoice 1:1</div>
+<ul><li><code>is_valid</code></li><li><code>severity_max</code></li><li><code>error_ / warning_ / information_count</code></li><li><code>findings</code><i>JSON</i></li><li><code>validator_customization</code></li><li><code>validated_at</code></li></ul></div>
+<div class="t"><header><b>invoice_audit_logs<span class="de">DE</span></b><div>Änderungsprotokoll (GoBD)</div></header>
+<div class="rel">invoice 1:n · tenant 1:n</div>
+<ul><li><code>invoice_number</code><i>bleibt, auch ohne FK</i></li><li><code>action</code></li><li><code>user / ip_address</code></li><li><code>changes</code><i>JSON</i></li><li><code>timestamp</code></li></ul></div>
+<div class="t"><header><b>invoice_archives<span class="de">DE</span></b><div>verschlüsseltes Original</div></header>
+<div class="rel">invoice 1:1 (PROTECT)</div>
+<ul><li><code>encrypted_data</code><i>binär</i></li><li><code>data_hash</code><i>SHA-256</i></li><li><code>file_size</code></li></ul></div>
+<div class="t"><header><b>archive_targets</b><div>externes Archiv des Kunden</div></header>
+<div class="rel">tenant 1:n</div>
+<ul><li><code>name / target_type</code></li><li><code>endpoint / mode</code></li><li><code>is_active</code></li></ul></div>
+<div class="t"><header><b>archive_handovers</b><div>Übergabe je Rechnung</div></header>
+<div class="rel">invoice 1:n · target 1:n</div>
+<ul><li><code>status</code></li><li><code>sha256</code></li><li><code>pushed_at / response</code></li></ul></div>
+</section>
+
+<!-- 5 Versand & Ereignisse -->
+<section class="col">
+<h2>5 · Versand &amp; Ereignisse</h2>
+<div class="t"><header><b>dispatch_requests</b><div>Versandauftrag (Peppol)</div></header>
+<div class="rel">invoice 1:n · tenant 1:n</div>
+<ul><li><code>channel / status</code></li><li><code>correlation_id</code><i>UUID</i></li><li><code>ap_document_id</code><i>Access Point</i></li><li><code>attempts_count / next_retry_at</code></li><li><code>is_sandbox</code></li><li><code>last_error</code></li></ul></div>
+<div class="t"><header><b>dispatch_attempts</b><div>einzelner Versuch</div></header>
+<div class="rel">dispatch 1:n</div>
+<ul><li><code>status_code / success</code></li><li><code>response_body</code></li><li><code>duration_ms</code></li></ul></div>
+<div class="t"><header><b>invoice_events</b><div>fachliches Ereignis</div></header>
+<div class="rel">invoice 1:n · tenant 1:n</div>
+<ul><li><code>event_type</code></li><li><code>occurred_at</code></li><li><code>correlation_id</code></li><li><code>payload_json</code><i>JSON</i></li><li><code>processed</code></li></ul></div>
+<div class="t"><header><b>webhook_endpoints</b><div>Ziel-URL des Integrators</div></header>
+<div class="rel">tenant 1:n</div>
+<ul><li><code>url</code></li><li><code>subscribed_events</code><i>JSON</i></li><li><code>consecutive_failures</code></li><li><code>is_active</code></li></ul></div>
+<div class="t"><header><b>webhook_deliveries</b><div>Zustellung je Ereignis</div></header>
+<div class="rel">endpoint 1:n · event 1:n</div>
+<ul><li><code>attempts / max_attempts</code></li><li><code>response_status / _body</code></li><li><code>next_retry_at / completed_at</code></li><li><code>success</code></li></ul></div>
+<div class="t"><header><b>export_logs<span class="de">DE</span></b><div>DATEV-/GoBD-Export</div></header>
+<div class="rel">tenant 1:n</div>
+<ul><li><code>export_type</code></li><li><code>date_from / date_to</code></li><li><code>invoice_ids / invoice_count</code></li><li><code>file_hash</code></li></ul></div>
+</section>
+
+</div>
+<p class="foot">Nicht gezeigt: Ops-Insel (<code>ops_api</code>), Eingangsrechnungen (<code>apps/incoming</code>), Produkte, Users, MCP, Support, Leadmagnet. Die Steuerkategorie einer Position wird ausschließlich von <code>resolve_tax</code> entschieden und als <code>tax_category_code</code> + <code>tax_source</code> gespeichert.</p>
+</main>
+</body>
+</html>
