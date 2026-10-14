@@ -448,6 +448,30 @@ verändert. Dasselbe Objekt liefert `GET /invoices/{id}/` im Feld
 `provenance`-Felder `null`: der Validator wurde damals nicht mitgeschrieben
 und wird nicht nachgetragen.
 
+### Kommende Regelsatz-Version — `meta.upcoming`
+
+Steht eine neue XRechnung- oder Peppol-Version mit festem Gültig-ab-Datum
+bevor, prüft Factora jede Rechnung zusätzlich gegen diese Version und meldet
+das Ergebnis in `meta.upcoming` — **beratend**: der Block ändert weder das
+Urteil noch den Status noch die Abrechnung der Rechnung, und er wird nicht
+gespeichert.
+
+```json
+"meta": {"upcoming": {
+  "standard": "xrechnung", "version": "4.0.0", "valid_from": "2027-08-01",
+  "source": "https://xeinkauf.de/xrechnung/versionen-und-bundles/",
+  "status": "rejected",
+  "findings": [{"rule": "BR-DE-99", "message": "…",
+                "text": "Verstößt gegen XRechnung 4.0.0, gültig ab 2027-08-01 (…): BR-DE-99 …"}]
+}}
+```
+
+`status` ist `accepted`, `rejected` oder `unavailable` (Prüfung gegen die
+kommende Version nicht erreichbar — ohne Folgen für die Rechnung). Factora
+schaltet den Block nur für **veröffentlichte, ausführbare** Regelsätze mit
+offiziellem Gültig-ab-Datum ein; Entwürfe und Vorversionen nie. Solange keine
+solche Version ansteht, fehlt `meta.upcoming`.
+
 ### Factora-PDF oder eigene Ansicht
 
 Welche Dateien Sie bekommen, stellen Sie in der Console unter

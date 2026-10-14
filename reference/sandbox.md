@@ -41,6 +41,8 @@ echte Kontodaten lesen oder schreiben.
 - nennt in `data.validation` das KoSIT-Ergebnis und in
   `data.validation.provenance` Validator und Regelsatz — angezeigt, nicht
   gespeichert (`validated_at` ist `null`),
+- nennt in `meta.upcoming` — sofern eine kommende Regelsatz-Version
+  ansteht — das beratende Urteil dieser Version,
 - antwortet mit **HTTP 200** (Live erzeugt `201`),
 - setzt `meta.sandbox: true`,
 - **speichert nichts** — keine Rechnung, keinen Kunden, **keine
