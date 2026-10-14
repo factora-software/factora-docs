@@ -45,15 +45,9 @@ Befunde werden strukturiert zurückgegeben (Regel, Geschäftsbegriff,
 Fundstelle). Welche Formate amtlich abgenommen sind, steht unter
 [Rechnungsformate](formats.md).
 
-## Datenschutz & Betrieb
+## Betrieb, Datenexport und Ausstieg
 
-- Betrieb und Datenhaltung in **Deutschland**.
-- **DSGVO**-konform mit Auftragsverarbeitungsvertrag (AVV).
-- Tägliche Sicherung der Daten.
-- Sensible Felder (z. B. Bankverbindung) werden verschlüsselt gespeichert.
-
-## Datenexport
-
-- Vollständiger Konto-Datenexport auf Anforderung.
-- **DATEV-Export** der Buchungsdaten für die Finanzbuchhaltung — siehe
-  [Exporte](exports.md).
+Hosting, Datensicherung, Datenexport, Aufbewahrung nach Kündigung und
+Notfall-Kontakt stehen mit Belegen an einer Stelle:
+[factora.software/vertrauen](https://factora.software/vertrauen/). Die
+Export-Endpunkte selbst beschreibt [Exporte](exports.md).
