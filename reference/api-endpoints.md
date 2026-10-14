@@ -26,6 +26,7 @@ maßgeblich**.
 | POST | `/invoices/preview/` | Summen live berechnen (ohne Speicherung) | `invoices:read` | ✓ |
 | POST | `/invoices/convert/` | EN-16931-JSON → geprüftes XML (ohne Speicherung) | `invoices:write` | ✓ |
 | POST | `/e-invoice-obligation/check/` | Prüfen, ob ein Vorgang in DE eine E-Rechnung sein muss (ohne Speicherung, nicht abgerechnet) | `invoices:read` | ✓ |
+| POST | `/parties/check/` | Stammdaten einer Partei vorab prüfen: USt-IdNr. (Format + VIES), Leitweg-ID, elektronische Adresse (ohne Speicherung, nicht abgerechnet) | `invoices:read` | ✓ |
 | GET | `/invoices/` | Rechnungen auflisten (paginiert, filterbar) | `invoices:read` | — |
 | POST | `/invoices/` | Rechnung als Entwurf anlegen | `invoices:write` | — |
 | GET | `/invoices/{id}/` | Einzelne Rechnung abrufen | `invoices:read` | — |
@@ -83,6 +84,36 @@ und bei inaktivem Abo nutzbar.
 Rendert EN-16931-Rechnungsdaten ohne Speicherung in geprüftes XML
 (CII/XRechnung oder UBL, je nach Rechnungstyp) und gibt KoSIT-Befunde zurück.
 Ideal, um die eigene Datenabbildung zu testen.
+
+### Stammdaten vorab prüfen — `POST /parties/check/`
+
+Prüft die Stammdaten einer Partei, bevor die erste Rechnung an sie geht. Es
+wird nichts angelegt, nichts gespeichert und nichts abgerechnet. Mindestens
+eine der drei Angaben ist nötig.
+
+```json
+{
+  "vat_id": "DE123456789", "country": "DE",
+  "leitweg_id": "04011000-1234512345-06",
+  "electronic_address": {"scheme": "0204", "value": "04011000-1234512345-06"}
+}
+```
+
+| Block | Antwort |
+|---|---|
+| `vat_id` | `format_valid` (Aufbau + Länderpräfix passt zu `country`), `format_message`, `vies_status` = `VALID` \| `INVALID` \| `UNVERIFIED`, `vies_reason` |
+| `leitweg_id` | `structure_valid`, `checksum_valid` (Prüfziffer nach ISO/IEC 7064 Mod 97-10, Leitweg-ID-Formatspezifikation 2.0.2; `null`, wenn schon der Aufbau falsch ist), `message` |
+| `electronic_address` | `valid` für die Schemata `0204` (Leitweg-ID), `9930` (DE-USt-IdNr.), `EM` (E-Mail), `0088` (GLN); `null` für andere Schemata — die prüft Factora nicht inhaltlich |
+
+`UNVERIFIED` heißt: VIES hat nicht entschieden — nicht erreichbar
+(`vies_unreachable`), Nummer außerhalb der EU (`not_checked`) oder Format
+falsch (`format_invalid`). Es heißt **nie** „ungültig“.
+
+Die Antwort enthält bewusst **keine Steuerkategorie**: eine registrierte
+USt-IdNr. sagt nichts über die steuerliche Behandlung einer Rechnung aus.
+
+Dieselbe Leitweg-ID-Prüfung läuft auch beim Anlegen einer Rechnung: ein
+falscher Aufbau ist dort ein Fehler, eine falsche Prüfziffer eine Warnung.
 
 ### E-Rechnungspflicht prüfen — `POST /e-invoice-obligation/check/`
 
