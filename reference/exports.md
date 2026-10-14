@@ -99,6 +99,17 @@ Abruf; enthält der Zeitraum mehr, antwortet der Endpunkt mit `400`
 Das ZIP trägt ausschließlich die bei der Finalisierung archivierten Dateien;
 nichts wird beim Export neu erzeugt.
 
+### Prüfnachweis je Rechnung
+
+`index.csv` und `index.json` tragen je Rechnung das KoSIT-Ergebnis der
+Finalisierung (`kosit_result`) und womit geprüft wurde: `validator_customization`,
+`validator_image`, `validator_digest`, `validator_engine`, `validator_scenario`,
+`validator_rulesets` (mehrere Werte durch ` | ` getrennt) und `validated_at`.
+Die Prüfung lief bei der Finalisierung; Rechnungen, die vor Juli 2026 ohne
+Prüfung finalisiert wurden, sind nachgeprüft — `validated_at` nennt den
+Zeitpunkt. Leer heißt: nicht bekannt — die Rechnung wurde vor Oktober 2026
+geprüft oder nie.
+
 ### Vollständigkeit und Manifest
 
 Kann eine Datei nicht aufgenommen werden — etwa weil zu einer Rechnung kein

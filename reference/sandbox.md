@@ -38,6 +38,9 @@ echte Kontodaten lesen oder schreiben.
   XML ist maschinell ungültig. Das Wasserzeichen lässt sich nicht abschalten,
 - gibt **keine XRechnung-XML** aus — `data.xml_base64` ist immer `null`. Ein
   maschinenlesbares Dokument gibt es nur mit einem Live-Schlüssel,
+- nennt in `data.validation` das KoSIT-Ergebnis und in
+  `data.validation.provenance` Validator und Regelsatz — angezeigt, nicht
+  gespeichert (`validated_at` ist `null`),
 - antwortet mit **HTTP 200** (Live erzeugt `201`),
 - setzt `meta.sandbox: true`,
 - **speichert nichts** — keine Rechnung, keinen Kunden, **keine

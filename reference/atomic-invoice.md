@@ -427,6 +427,27 @@ Frei verwendbares Objekt für weitere EN-16931-Felder. Werte aus dem Aufruf
 bzw. `null` ohne Factora-PDF, `data.xml_base64` ist immer `null` — siehe
 [Sandbox & Testing](sandbox.md).
 
+### Prüfnachweis — `data.validation`
+
+Jede Antwort enthält in `data.validation` das KoSIT-Ergebnis der Rechnung
+(`severity_max`, `severity_label`, Zähler) und in `data.validation.provenance`,
+womit geprüft wurde:
+
+| Feld | Inhalt |
+|---|---|
+| `customization` | `xrechnung` oder `peppol` — welcher Validator lief |
+| `image`, `digest` | Validator-Image und sein `sha256`-Digest |
+| `engine` | Version der KoSIT-Engine laut Prüfbericht |
+| `scenario` | KoSIT-Szenario, das die Rechnung geprüft hat |
+| `rulesets` | Regelsatz-Versionen, gegen die geprüft wurde |
+| `validated_at` | Zeitpunkt der gespeicherten Prüfung; in der Sandbox `null` |
+
+Der Nachweis entsteht bei der Finalisierung und wird danach nicht mehr
+verändert. Dasselbe Objekt liefert `GET /invoices/{id}/` im Feld
+`validation`. Bei Rechnungen, die vor Oktober 2026 geprüft wurden, sind die
+`provenance`-Felder `null`: der Validator wurde damals nicht mitgeschrieben
+und wird nicht nachgetragen.
+
 ### Factora-PDF oder eigene Ansicht
 
 Welche Dateien Sie bekommen, stellen Sie in der Console unter
