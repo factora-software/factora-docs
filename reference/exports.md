@@ -70,8 +70,9 @@ Debitorennummer. Fehlt sie (Altbestand), greift ein synthetischer Fallback
 
 Liefert alle finalisierten Rechnungen eines Zeitraums als ZIP — je Rechnung
 die bei der Finalisierung archivierte **PDF** und **XML**, dazu ein Index und
-ein Manifest. Gedacht für Archivübernahme, Betriebsprüfung und Systemwechsel;
-für den laufenden Abruf einzelner Rechnungen sind `/invoices/{id}/pdf/` und
+ein Manifest. Gedacht für Ihr eigenes Archiv, die Betriebsprüfung und den
+Systemwechsel. **Die Aufbewahrung nach GoBD / § 147 AO liegt bei Ihnen** —
+Factora archiviert Ihre Rechnungen nicht. Für den laufenden Abruf einzelner Rechnungen sind `/invoices/{id}/pdf/` und
 `/invoices/{id}/xml/` der richtige Weg.
 
 ### Parameter
@@ -105,10 +106,10 @@ nichts wird beim Export neu erzeugt.
 Finalisierung (`kosit_result`) und womit geprüft wurde: `validator_customization`,
 `validator_image`, `validator_digest`, `validator_engine`, `validator_scenario`,
 `validator_rulesets` (mehrere Werte durch ` | ` getrennt) und `validated_at`.
-Die Prüfung lief bei der Finalisierung; Rechnungen, die vor Juli 2026 ohne
-Prüfung finalisiert wurden, sind nachgeprüft — `validated_at` nennt den
-Zeitpunkt. Leer heißt: nicht bekannt — die Rechnung wurde vor Oktober 2026
-geprüft oder nie.
+`kosit_result`: `none` = keine Fehler gefunden, `warning` bzw. `error` = die
+Prüfung hat Befunde gemeldet, leer = zu dieser Rechnung ist keine Prüfung
+gespeichert. Leere `validator_*`- bzw. `validated_at`-Felder heißen: für diese
+Prüfung nicht aufgezeichnet.
 
 ### Vollständigkeit und Manifest
 
@@ -123,7 +124,7 @@ ZIP trotzdem geliefert. Dann gilt:
 
 ```json
 {
-  "format": "GoBD-Export v1.0",
+  "format": "Rechnungs-Export v1.0",
   "created_at": "2026-09-14T10:15:00+00:00",
   "invoice_count": 2,
   "file_count": 3,
