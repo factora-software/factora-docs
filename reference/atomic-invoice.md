@@ -144,7 +144,9 @@ dadurch nicht; das aufgelöste Profil steht immer in der Antwort.
 | `mandate_reference` | string(64) | nein | `""` | BT-89 | SEPA-Mandatsreferenz |
 | `creditor_reference` | string(64) | nein | `""` | BT-90 | Gläubiger-ID |
 | `debited_account` | string(34) | nein | `""` | BT-91 | IBAN des belasteten Kontos |
-| `parent_invoice` | integer | nein | — | BT-25 | Bezugsrechnung (Korrektur/Gutschrift, BT-25/26) |
+| `parent_invoice` | integer | nein | — | BT-25 | Bezugsrechnung in Factora (BT-25/26); bei 381/384 Pflicht, wenn keine Freitext-Referenz |
+| `preceding_invoice_number` | string(50) | nein | `""` | BT-25 | Nummer der berichtigten Rechnung außerhalb von Factora; nur mit `preceding_invoice_date`, nie neben `parent_invoice` |
+| `preceding_invoice_date` | date | nein | — | BT-26 | Datum der berichtigten Rechnung außerhalb von Factora |
 | `vat_accounting_currency` | string(3) | nein | `""` | BT-6 | abweichende USt-Währung |
 | `tax_amount_accounting` | decimal | nein | — | BT-111 | USt in Buchungswährung (Pflicht, wenn BT-6 gesetzt) |
 | `rounding_amount` | decimal | nein | — | BT-114 | Rundungsbetrag |

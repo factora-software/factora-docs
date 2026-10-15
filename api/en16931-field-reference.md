@@ -10,7 +10,7 @@ Die Spalten **CII** und **UBL** zeigen, ob der Geschäftsbegriff in der jeweilig
 
 Abdeckung gesamt: **164 vollständig · 0 teilweise · 0 offen** (Summe 164).
 
-> Automatisch generiert aus apps/invoices/standards/en16931.py · Stand: 2026-09-15. Nicht von Hand bearbeiten — bei Änderungen docs/api/build_field_reference.py neu ausführen.
+> Automatisch generiert aus apps/invoices/standards/en16931.py · Stand: 2026-10-15. Nicht von Hand bearbeiten — bei Änderungen docs/api/build_field_reference.py neu ausführen.
 
 ## Dokumentenkopf
 
@@ -54,8 +54,8 @@ Abdeckung gesamt: **164 vollständig · 0 teilweise · 0 offen** (Summe 164).
 
 | BT | Feld (deutsch) | EN 16931 (englisch) | Pfad im Request | CII | UBL | Mapping-Hinweis |
 | --- | --- | --- | --- | --- | --- | --- |
-| BT-25 | Nummer der Vorrechnung | Preceding invoice number | invoice_header.parent_invoice | ✓ | ✓ | atomic header.parent_invoice (ID, tenant-scoped); CII InvoiceReferencedDocument (jeder parent) / UBL BillingReference |
-| BT-26 | Datum der Vorrechnung | Preceding invoice issue date | invoice_header.parent_invoice | ✓ | ✓ | abgeleitet aus parent.invoice_date |
+| BT-25 | Nummer der Vorrechnung | Preceding invoice number | invoice_header.parent_invoice | ✓ | ✓ | atomic header.parent_invoice (ID, tenant-scoped) oder B-AP120 header.preceding_invoice_number (Rechnung ausserhalb Factora); bei 381/384 Pflicht; CII InvoiceReferencedDocument / UBL BillingReference (Standard-Rechnung + Credit-Note) |
+| BT-26 | Datum der Vorrechnung | Preceding invoice issue date | invoice_header.parent_invoice | ✓ | ✓ | abgeleitet aus parent.invoice_date, sonst B-AP120 header.preceding_invoice_date |
 
 ## BG-4 — Verkäufer
 

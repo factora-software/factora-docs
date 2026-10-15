@@ -47,10 +47,19 @@ Abschlagsführung hergestellt.
 
 ### Korrekturrechnung (384)
 
-Berichtigt eine bereits gestellte Rechnung. Über das Feld
-`invoice_header.parent_invoice` wird die ursprüngliche Rechnung referenziert
-(BG-3 / BT-25 / BT-26). Im UBL/Peppol-Format wird eine Korrektur als
-**CreditNote** abgebildet.
+Berichtigt eine bereits gestellte Rechnung. Eine Korrektur **muss** die
+ursprüngliche Rechnung nennen (BG-3 / BT-25 / BT-26, § 31 Abs. 5 UStDV) —
+fehlt der Bezug, antwortet die API mit `400` (`bt: BT-25`). Zwei Wege, genau
+einer davon:
+
+- `parent_invoice` (nur Atomic) — ID einer Rechnung, die in Factora liegt;
+  Nummer und Datum kommen aus ihr.
+- `preceding_invoice_number` + `preceding_invoice_date` — Nummer und Datum
+  einer Rechnung, die woanders ausgestellt wurde. Beide Felder gehören
+  zusammen.
+
+Im UBL/Peppol-Format wird eine Korrektur als **CreditNote** (381) abgebildet;
+`381` als Eingabe ist gleichbedeutend mit `384`.
 
 ### Gutschrift / Self-Billing (389)
 
