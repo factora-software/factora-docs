@@ -199,6 +199,22 @@ Pflichtfeld gehört. Ein Client kann diese Schlüssel dort also ohne
 Existenzprüfung auslesen. Bei allen anderen Fehlerarten (Authentifizierung,
 Kontingent, Schema-Validierung der Eingabe) fehlen sie weiterhin ganz.
 
+**Umsatzsteuerliche Einordnung (`tax_relevance`).** Jeder Validierungsbefund
+trägt zusätzlich `tax_relevance`. Gefüllt ist es nur bei KoSIT-Fehlern
+(`code: "kosit"`, `severity: "error"`), nach BMF-Schreiben vom 15.10.2026
+(Rn. 22-23):
+
+| Wert | Bedeutung |
+|---|---|
+| `format_error` | XML- oder XSD-Fehler — die Datei ist keine E-Rechnung |
+| `content_error` | Die verletzte Regel betrifft eine Pflichtangabe nach §§ 14, 14a UStG (Zuordnungstabelle KoSIT/FeRD, Stand 25.07.2025) |
+| `technical` | Regel ohne Pflichtangabe — technisch nicht EN-16931-konform, umsatzsteuerlich trotzdem eine E-Rechnung |
+| `undetermined` | Der Befund nennt kein Feld; Factora ordnet ihn nicht ein |
+
+Bei Warnungen, Hinweisen und eigenen Geschäftsregeln (`code: "business"`)
+steht `null`. Das ist eine Einordnung, keine Rechtsberatung — und sie ändert
+nichts daran, dass Factora jedes Dokument mit KoSIT-Fehler ablehnt.
+
 > Bei **5xx** greift die Hülle nicht — das ist ein unerwarteter Serverfehler.
 > Bitte mit Request-Details an den Support melden.
 
