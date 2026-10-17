@@ -108,10 +108,11 @@ dadurch nicht; das aufgelöste Profil steht immer in der Antwort.
 | Feld | Typ | Pflicht | Default | BT | Bemerkung |
 |---|---|---|---|---|---|
 | `invoice_number` | string(50) | ja | — | BT-1 | Rechnungsnummer |
-| `invoice_type` | string(10) | nein | `"380"` | BT-3 | 380 Rechnung, 384 Korrektur, 386 Abschlag, 389 Gutschrift/Self-Billing |
+| `invoice_type` | string(20) | nein | `"380"` | BT-3 | 380 Rechnung, 381 Korrektur als Minderung, 384 Korrekturrechnung, 386 Abschlag, 389 Gutschrift/Self-Billing, oder internes Kürzel (`schlussrechnung`, `abschlag_kumuliert`, …). Unbekannte Werte → `400`, nie still 380 |
 | `profile` | string | nein | `"xrechnung"` | — | **entscheidet die Pflichtmenge** — `xrechnung` (deutscher CIUS inkl. BR-DE) oder `en16931` (europäisches Kernmodell); siehe [Profilabhängige Pflichtfelder](#profilabhängige-pflichtfelder) |
 | `invoice_date` | date | ja | — | BT-2 | Rechnungsdatum |
-| `delivery_date` | date | nein | — | BT-72 | Liefer-/Leistungsdatum (erscheint im PDF als „Lieferdatum") |
+| `delivery_date` | date | nein | — | BT-72 | Liefer-/Leistungsdatum (erscheint im PDF als „Lieferdatum"). Ohne Datum und ohne Leistungszeitraum steht das Rechnungsdatum als Leistungsdatum im Dokument, `meta.warnings` meldet `DELIVERY_DATE_ASSUMED`; mit Leistungszeitraum entfällt BT-72 |
+| `retention_notice_required` | bool | nein | `false` | BG-1 | Hinweis auf die Aufbewahrungspflicht des Leistungsempfängers (§ 14 Abs. 4 Nr. 9, § 14b UStG) in Notiz und PDF |
 | `billing_start_date` | date | nein | — | BT-73 | Abrechnungszeitraum Beginn |
 | `billing_end_date` | date | nein | — | BT-74 | Ende (≥ Beginn) |
 | `currency` | string(3) | nein | `"EUR"` | BT-5 | ISO 4217 |
@@ -120,14 +121,14 @@ dadurch nicht; das aufgelöste Profil steht immer in der Antwort.
 | `payment_due_date` | date | nein | — | BT-9 | Fälligkeitsdatum |
 | `payment_terms` | string | nein | `""` | BT-20 | Zahlungsbedingungen (Freitext) |
 | `payment_means_code` | string(4) | nein | `"58"` | BT-81 | UNCL 4461 (30 Überweisung, 58 SEPA, 49 Lastschrift …) |
-| `prepaid_amount` | decimal | nein | — | BT-113 | Bereits gezahlter Betrag (≤ Brutto); BT-115 = Brutto − BT-113 |
+| `prepaid_amount` | decimal | nein | — | BT-113 | Bereits gezahlter Betrag (≤ Brutto); BT-115 = Brutto − BT-113. **Pflicht bei `schlussrechnung`** (Summe der Teilentgelte, `0` wenn keine) — Details je Teilentgelt mit Entgelt und Steuer in `notes` (BT-22, BMF 15.10.2026 Rn. 3) |
 | `tax_point_date` | date | nein | — | BT-7 | Steuerstichtag (alternativ zu BT-8) |
 | `tax_point_date_code` | string(4) | nein | `""` | BT-8 | UNTDID 2475 (5/29/72) |
 | `contract_reference` | string | nein | `""` | BT-12 | Vertragsnummer |
 | `project_reference` | string | nein | `""` | BT-11 | Projektreferenz |
 | `accounting_cost_code` | string | nein | `""` | BT-19 | Kostenstelle des Käufers |
 | `customization_id` | string | nein | `""` | BT-24 | CustomizationID überschreiben (leer = XRechnung-Default) |
-| `notes` | string | nein | `""` | BT-22 | Rechnungshinweis |
+| `notes` | string | nein | `""` | BT-22 | Rechnungshinweis; bei einer Schlussrechnung die Aufstellung der Teilentgelte. Erscheint unverändert im PDF |
 | `note_subject_code` | string(10) | nein | `""` | BT-21 | Hinweis-Code (UNTDID 4451) |
 | `sales_order_reference` | string(100) | nein | `""` | BT-14 | Auftragsnummer des Verkäufers |
 | `receiving_advice_reference` | string(100) | nein | `""` | BT-15 | Wareneingangsmeldung |
@@ -402,16 +403,16 @@ Anhang ist **entweder** `content_base64` **oder** `external_url` anzugeben.
 Der MIME-Typ wird gegen eine Whitelist geprüft und der Dateiinhalt
 zusätzlich anhand der „Magic Bytes" verifiziert.
 
-**Erlaubte MIME-Typen:** PDF, PNG, JPEG, CSV, ODS (OpenDocument), XLSX, XLS.
+**Erlaubte MIME-Typen (BR-CL-24):** PDF, PNG, JPEG, CSV, ODS (OpenDocument), XLSX. `.xls` wird abgelehnt, weil KoSIT es fatal zurückweist.
 
 <!-- felder: attachments[] -->
 | Feld | Typ | Pflicht | Default | BT | Bemerkung |
 |---|---|---|---|---|---|
 | `filename` | string(255) | ja | — | — | Dateiname |
-| `mime_type` | string(100) | ja | — | BT-125-1 | aus Whitelist |
+| `mime_type` | string(100) | ja | — | BT-125-1 | `application/pdf`, `image/png`, `image/jpeg`, `text/csv`, ODS, XLSX (BR-CL-24); `.xls` wird abgelehnt |
 | `type` | string | nein | `"OTHER"` | — | `INVOICE_IMAGE` / `DELIVERY_NOTE` / `OTHER` |
 | `content_base64` | string | bedingt | `""` | BT-125 | eingebettete Datei (XOR `external_url`) |
-| `external_url` | string(500) | bedingt | `""` | BT-124 | externer Link (XOR `content_base64`) |
+| `external_url` | string(500) | bedingt | `""` | BT-124 | externer Link (XOR `content_base64`). **Kein Ersatz für eine eingebettete Anlage:** Unterlagen, die zur Rechnung gehören (Leistungsverzeichnis, Stundennachweis, Teilentgelt-Aufstellung), als `content_base64` senden (BMF 15.10.2026 Rn. 4, 14, 19) |
 | `document_reference` | string(200) | nein | `""` | BT-122 | Dokumentkennung |
 | `description` | string(255) | nein | `""` | BT-123 | Beschreibung |
 | `delivery_note_number` | string | nein | `""` | — | bei `type=DELIVERY_NOTE` |
