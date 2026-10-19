@@ -43,6 +43,7 @@ laufen zu lassen.
 | `buyer` | Objekt | ja | — | Käufer/Empfänger |
 | `shipping` | Objekt | nein | — | abweichende Lieferadresse |
 | `items` | Array | ja | — | min. 1 Position |
+| `header_charges` | Array | nein | `[]` | Nachlässe und Zuschläge auf Dokumentebene (BG-20/21), s. u. |
 | `attachments` | Array | nein | `[]` | bis 10 Anhänge, max. 15 MB gesamt |
 | `extended_fields` | Objekt | nein | `{}` | optionale EN-16931-Zusatzfelder |
 
@@ -157,11 +158,12 @@ dadurch nicht; das aufgelöste Profil steht immer in der Antwort.
 <!-- felder: validation_totals -->
 | Feld | Typ | Pflicht | Bemerkung |
 |---|---|---|---|
-| `net_amount` | decimal | ja | Summe der Netto-Positionsbeträge |
+| `net_amount` | decimal | ja | Summe der Netto-Positionsbeträge − Nachlässe + Zuschläge auf Dokumentebene |
 | `vat_amount` | decimal | ja | Gesamte USt |
 | `gross_amount` | decimal | ja | Brutto (Netto + USt) |
 
-Der Server berechnet die Summen aus den Positionen neu und vergleicht sie
+Der Server berechnet die Summen aus den Positionen und den Nachlässen und
+Zuschlägen auf Dokumentebene (`header_charges`) neu und vergleicht sie
 mit diesen Werten. **Toleranz: 0,02 € je Feld** (netto, USt., brutto), absolut
 gerechnet. Darüber wird die Anfrage mit **HTTP 400** abgelehnt; die Meldung
 nennt den berechneten und den gesendeten Wert.
@@ -396,6 +398,57 @@ Pflichtfelder je Position: `description`, `quantity`, `unit`,
 | `price_base_quantity` | decimal(…,3) | nein | — | BT-149 | Preisbasis-Menge |
 | `price_base_quantity_unit` | string(3) | nein | `""` | BT-150 | Einheit der Preisbasis |
 
+## Nachlässe und Zuschläge auf Dokumentebene — `header_charges[]` (BG-20/21)
+
+Ein Nachlass auf die ganze Rechnung (z. B. 5 % Objektrabatt) oder ein
+Zuschlag (Fracht, Verpackung), der keiner Position zugeordnet ist. Dieselbe
+Form wie bei `POST /api/v1/invoices/convert/`.
+
+<!-- felder: header_charges[] -->
+| Feld | Typ | Pflicht | Default | BT | Bemerkung |
+|---|---|---|---|---|---|
+| `is_charge` | boolean | nein | `false` | — | `false` = Nachlass (BG-20), `true` = Zuschlag (BG-21) |
+| `amount` | decimal(…,2) | nein | `0.00` | BT-92 | Betrag, immer positiv (Zuschlag: BT-99). Wird **nicht** aus Basis × Prozentsatz berechnet |
+| `base_amount` | decimal(…,2) | nein | — | BT-93 | Basisbetrag (Zuschlag: BT-100) |
+| `percentage` | decimal(…,2) | nein | — | BT-94 | Prozentsatz (Zuschlag: BT-101) |
+| `reason_text` | string(255) | bedingt | `""` | BT-97 | Grund (Zuschlag: BT-104). Grund **oder** Grund-Code ist Pflicht (BR-33 / BR-38) |
+| `reason_code` | string(16) | bedingt | `""` | BT-98 | Grund-Code, UNTDID 5189 für Nachlässe bzw. 7161 für Zuschläge (BT-105) |
+| `vat_category_code` | string | ja | — | BT-95 | USt-Kategorie: `S`, `Z`, `E`, `AE`, `K`, `G`, `O` (Zuschlag: BT-102) |
+| `vat_rate` | decimal(5,2) | ja | — | BT-96 | USt-Satz in Prozent (Zuschlag: BT-103) |
+| `tax_exemption_reason_code` | string(16) | nein | `""` | — | VATEX-Befreiungsgrund (BT-121) für die Aufschlüsselung dieser Kategorie |
+| `tax_exemption_reason_text` | string(500) | nein | `""` | — | Befreiungsgrund als Text (BT-120) |
+
+**Kategorie und Satz geben Sie an — Factora leitet sie nicht ab.** Sie müssen
+zueinander passen: `S` mit einem Satz über 0 %, `Z`, `E`, `AE`, `K`, `G` und
+`O` mit 0 %. Ein Widerspruch wird mit **HTTP 400** abgelehnt, ebenso eine
+fehlende Kategorie oder ein fehlender Satz. Der Nachlass mindert die
+Bemessungsgrundlage seiner Kategorie in der Steueraufschlüsselung (BG-23) und
+in den Summen; das Factora-PDF zeigt ihn als eigene Zeile unter der Summe der
+Positionen.
+
+**Der Betrag zählt.** `base_amount` und `percentage` werden in die Rechnung
+übernommen, aber nicht nachgerechnet. Fehlt `amount`, gilt 0,00 — enthalten
+Ihre `validation_totals` den Nachlass, lehnt die Summenprüfung die Anfrage
+dann mit HTTP 400 ab.
+
+```json
+"header_charges": [
+  {
+    "is_charge": false,
+    "amount": "610.94",
+    "base_amount": "12218.72",
+    "percentage": "5.00",
+    "reason_code": "95",
+    "reason_text": "Rabatt",
+    "vat_category_code": "S",
+    "vat_rate": "19.00"
+  }
+]
+```
+
+Mit zwei Positionen zu 12.218,72 € und 3.093,57 € (19 %) sind die
+`validation_totals` dazu `14701.35` / `2793.26` / `17494.61`.
+
 ## Anhänge — `attachments[]`
 
 Bis zu **10 eingebettete Anhänge**, **max. 15 MB** je Datei und gesamt. Pro
@@ -590,7 +643,8 @@ der Nummer statt am Schlüssel.
 2. Bei befreiten Kategorien (E, AE, K, G, O) Befreiungstext/-code angeben
    (AE/K/G werden automatisch gefüllt).
 3. AE/K erfordern eine Käufer-USt-IdNr.; AE nur für B2B/B2G.
-4. `validation_totals` müssen zur Positionsberechnung passen.
+4. `validation_totals` müssen zur Positionsberechnung passen — einschließlich
+   der Nachlässe und Zuschläge aus `header_charges`.
 5. GLN/GTIN, falls angegeben, müssen gültige GS1-Prüfziffern haben.
 6. Anhänge: `content_base64` XOR `external_url`.
 7. `prepaid_amount` (BT-113) muss ≤ Bruttobetrag sein, sonst 400.
