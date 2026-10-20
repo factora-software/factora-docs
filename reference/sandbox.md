@@ -18,7 +18,7 @@ Sandbox-Schlüssel sind **nur** auf den persistenzfreien Endpunkten zugelassen:
 | Endpunkt | Verhalten mit Sandbox-Schlüssel |
 |---|---|
 | `POST /invoices/atomic/` | Trockenlauf: validiert, liefert das entwertete Vorschau-PDF, kein XML, speichert nichts |
-| `POST /invoices/preview/` | Summen-Vorschau (dezimalgenau, inkl. Positions-Nachlässe und -Zuschläge) |
+| `POST /invoices/preview/` | Summen-Vorschau (dezimalgenau, inkl. Positions-Nachlässe und -Zuschläge sowie Nachlässe/Zuschläge auf Dokumentebene, `header_charges`) |
 
 Alle anderen v1-Endpunkte lehnen Sandbox-Schlüssel mit **403** ab — sie würden
 echte Kontodaten lesen oder schreiben.

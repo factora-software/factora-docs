@@ -4,13 +4,13 @@ _Alle 164 unterstützten Business Terms · XRechnung (CII) + Peppol (UBL)_
 
 Alle **164 Geschäftsfelder (Business Terms)** der EN 16931, die Factora unterstützt. Jedes Feld wird sowohl in **XRechnung (CII)** als auch in **Peppol BIS 3.0 (UBL)** ausgegeben und ist gegen den KoSIT-Prüfstandard getestet.
 
-Die Spalte **Pfad im Request** zeigt, an welcher Stelle das Feld im JSON-Body von `POST /api/v1/invoices/atomic/` gesetzt wird (Kopfdaten unter `invoice_header.*`). `(automatisch berechnet)` = von Factora aus den Positionen ermittelt (z. B. Summen). `—` = wird von Factora gesetzt oder ist (noch) nicht als Einzelfeld der atomic-API verfügbar. Dokument-Nachlässe und -Zuschläge (BG-20/21) stehen als Liste unter `header_charges[]` und gehen in die Summen ein: `validation_totals` = Positionen − Nachlässe + Zuschläge.
+Die Spalte **Pfad im Request** zeigt, an welcher Stelle das Feld im JSON-Body von `POST /api/v1/invoices/atomic/` gesetzt wird (Kopfdaten unter `invoice_header.*`). `(automatisch berechnet)` = von Factora aus den Positionen ermittelt (z. B. Summen). `—` = wird von Factora gesetzt oder ist (noch) nicht als Einzelfeld der atomic-API verfügbar. Dokument-Nachlässe und -Zuschläge (BG-20/21) stehen als Liste unter `header_charges[]` und gehen in die Summen ein: `validation_totals` = Positionen − Nachlässe + Zuschläge. Dieselbe Liste nimmt die Summenvorschau `POST /api/v1/invoices/preview/` an; `POST /api/v1/invoices/` nimmt sie nicht an (400).
 
 Die Spalten **CII** und **UBL** zeigen, ob der Geschäftsbegriff in der jeweiligen Syntax ausgegeben wird: `✓` vollständig, `teilw.` eingeschränkt, `—` nicht. Der **Mapping-Hinweis** nennt das konkrete XML-Element bzw. die Bedingung, unter der das Feld greift — leer bzw. `—`, wo die Abbildung geradlinig ist.
 
 Abdeckung gesamt: **164 vollständig · 0 teilweise · 0 offen** (Summe 164).
 
-> Automatisch generiert aus apps/invoices/standards/en16931.py · Stand: 2026-10-19. Nicht von Hand bearbeiten — bei Änderungen docs/api/build_field_reference.py neu ausführen.
+> Automatisch generiert aus apps/invoices/standards/en16931.py · Stand: 2026-10-20. Nicht von Hand bearbeiten — bei Änderungen docs/api/build_field_reference.py neu ausführen.
 
 ## Dokumentenkopf
 
@@ -210,8 +210,8 @@ Abdeckung gesamt: **164 vollständig · 0 teilweise · 0 offen** (Summe 164).
 
 | BT | Feld (deutsch) | EN 16931 (englisch) | Pfad im Request | CII | UBL | Mapping-Hinweis |
 | --- | --- | --- | --- | --- | --- | --- |
-| BT-92 | Nachlass-Betrag | Allowance amount | header_charges[].amount | ✓ | ✓ | InvoiceHeaderCharge is_charge=False |
-| BT-93 | Nachlass-Basisbetrag | Allowance base amount | header_charges[].base_amount | ✓ | ✓ | CII BasisAmount; UBL BaseAmount. Wird gespeichert, nicht nachgerechnet |
+| BT-92 | Nachlass-Betrag | Allowance amount | header_charges[].amount | ✓ | ✓ | InvoiceHeaderCharge is_charge=False. Pflicht je Nachlass (BR-31), nie abgeleitet; fehlt er: 400 (B-AP125) |
+| BT-93 | Nachlass-Basisbetrag | Allowance base amount | header_charges[].base_amount | ✓ | ✓ | CII BasisAmount; UBL BaseAmount. Pflicht neben BT-94 (R041); BT-92 muss auf 0,02 zu Basis × Prozentsatz passen (R040) |
 | BT-94 | Nachlass-Prozentsatz | Allowance percentage | header_charges[].percentage | ✓ | ✓ | CII CalculationPercent; UBL MultiplierFactorNumeric |
 | BT-95 | Nachlass USt-Kategorie | Allowance VAT category code | header_charges[].vat_category_code | ✓ | ✓ | — |
 | BT-96 | Nachlass USt-Satz | Allowance VAT rate | header_charges[].vat_rate | ✓ | ✓ | — |
@@ -222,8 +222,8 @@ Abdeckung gesamt: **164 vollständig · 0 teilweise · 0 offen** (Summe 164).
 
 | BT | Feld (deutsch) | EN 16931 (englisch) | Pfad im Request | CII | UBL | Mapping-Hinweis |
 | --- | --- | --- | --- | --- | --- | --- |
-| BT-99 | Zuschlag-Betrag | Charge amount | header_charges[].amount | ✓ | ✓ | InvoiceHeaderCharge is_charge=True |
-| BT-100 | Zuschlag-Basisbetrag | Charge base amount | header_charges[].base_amount | ✓ | ✓ | CII BasisAmount; UBL BaseAmount (Doc-Charge BG-21) |
+| BT-99 | Zuschlag-Betrag | Charge amount | header_charges[].amount | ✓ | ✓ | InvoiceHeaderCharge is_charge=True. Pflicht je Zuschlag (BR-36), nie abgeleitet; fehlt er: 400 (B-AP125) |
+| BT-100 | Zuschlag-Basisbetrag | Charge base amount | header_charges[].base_amount | ✓ | ✓ | CII BasisAmount; UBL BaseAmount (Doc-Charge BG-21). Pflicht neben BT-101 (R041); BT-99 muss auf 0,02 passen (R040) |
 | BT-101 | Zuschlag-Prozentsatz | Charge percentage | header_charges[].percentage | ✓ | ✓ | CII CalculationPercent; UBL MultiplierFactorNumeric |
 | BT-102 | Zuschlag USt-Kategorie | Charge VAT category code | header_charges[].vat_category_code | ✓ | ✓ | — |
 | BT-103 | Zuschlag USt-Satz | Charge VAT rate | header_charges[].vat_rate | ✓ | ✓ | — |
@@ -274,7 +274,7 @@ Abdeckung gesamt: **164 vollständig · 0 teilweise · 0 offen** (Summe 164).
 | BT-128 | Positions-Objektkennung | Invoice line object identifier | items[].object_identifier | ✓ | ✓ | CII line AdditionalReferencedDocument (TypeCode 130); UBL line DocumentReference (DocumentTypeCode 130) |
 | BT-129 | Menge | Invoiced quantity | items[].quantity | ✓ | ✓ | — |
 | BT-130 | Mengeneinheit | Invoiced quantity unit of measure | items[].unit | ✓ | ✓ | UNCL 5272 |
-| BT-131 | Positionsnettobetrag | Invoice line net amount | — | ✓ | ✓ | — |
+| BT-131 | Positionsnettobetrag | Invoice line net amount | — | ✓ | ✓ | Atomic: berechnet. Convert lines[].line_total: fehlt/0 = berechnet, sonst auf 0,02 = Menge × Preis ± Positionsrabatt/-zuschlag (R120), max. 2 Nachkommastellen (B-AP125) |
 | BT-132 | Referenzierte Bestellposition | Referenced purchase order line | items[].order_line_reference | ✓ | ✓ | CII BuyerOrderReferencedDocument/LineID; UBL OrderLineReference/LineID |
 | BT-133 | Buchungsreferenz (Position) | Invoice line buyer accounting ref | items[].line_accounting_cost | ✓ | ✓ | CII line ReceivableSpecifiedTradeAccountingAccount/ID; UBL line AccountingCost |
 
@@ -312,7 +312,7 @@ Abdeckung gesamt: **164 vollständig · 0 teilweise · 0 offen** (Summe 164).
 | BT-146 | Nettoeinzelpreis | Item net price | items[].unit_price_net | ✓ | ✓ | — |
 | BT-147 | Einzelpreis-Rabatt | Item price discount | items[].price_discount | ✓ | ✓ | CII GrossPrice/AppliedTradeAllowanceCharge; UBL Price/AllowanceCharge/Amount (net = gross - discount) |
 | BT-148 | Bruttoeinzelpreis | Item gross price | items[].gross_price | ✓ | ✓ | CII GrossPriceProductTradePrice/ChargeAmount; UBL Price/AllowanceCharge/BaseAmount |
-| BT-149 | Preisbasismenge | Item price base quantity | items[].price_base_quantity | ✓ | ✓ | CII NetPrice/BasisQuantity; UBL Price/BaseQuantity |
+| BT-149 | Preisbasismenge | Item price base quantity | items[].price_base_quantity | ✓ | ✓ | CII NetPrice/BasisQuantity; UBL Price/BaseQuantity. Der Preis gilt je Basismenge: BT-131 = Menge × Preis / BT-149 (R120, B-AP125) |
 | BT-150 | Preisbasismenge-Einheit | Item price base quantity unit | items[].price_base_quantity_unit | ✓ | ✓ | unitCode auf BasisQuantity/BaseQuantity (UNCL5272) |
 
 ## BG-30 — Positions-USt

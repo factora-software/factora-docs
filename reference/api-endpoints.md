@@ -79,6 +79,32 @@ Berechnet aus übergebenen Positionen die Summen exakt (Dezimal) inklusive
 Aufschlüsselung je Steuersatz. Keine Speicherung, auch mit Sandbox-Schlüssel
 und bei inaktivem Abo nutzbar.
 
+Nachlässe und Zuschläge auf Dokumentebene (`header_charges`, BG-20/21) gehen
+ein wie bei [Atomic](atomic-invoice.md):
+dieselben Felder, `amount` Pflicht und nie aus `base_amount` × `percentage`
+berechnet (sonst `400`, `code=business`). Netto = Positionen − Nachlässe +
+Zuschläge, die Steuer je Satz und Kategorie einmal gerundet.
+
+```json
+{
+  "items": [
+    {"quantity": "1", "unit_price_net": "12218.72", "vat_rate": "19.00", "tax_category_code": "S"},
+    {"quantity": "1", "unit_price_net": "3093.57", "vat_rate": "19.00", "tax_category_code": "S"}
+  ],
+  "header_charges": [
+    {"is_charge": false, "amount": "610.94", "base_amount": "12218.72", "percentage": "5.00",
+     "reason_code": "95", "reason_text": "Rabatt", "vat_category_code": "S", "vat_rate": "19.00"}
+  ]
+}
+```
+
+→ `subtotal` 14701.35, `tax_amount` 2793.26, `total` 17494.61. Wer diese
+Werte als `validation_totals` an Atomic schickt, sendet `tax_category_code`
+an den Positionen mit: dann liegen Positionen und Nachlass in derselben Zeile
+der Steueraufschlüsselung, und die Vorschau liefert centgenau die Summen, die
+Atomic bucht. Ohne Kategorie wird nichts abgeleitet, und die Vorschau rundet
+Positionen und Nachlass getrennt (höchstens 1 Cent Unterschied je Satz).
+
 ### Convert — `POST /invoices/convert/`
 
 Rendert EN-16931-Rechnungsdaten ohne Speicherung in geprüftes XML
@@ -170,6 +196,10 @@ Nicht abgedeckt: Vorgaben für Rechnungen an öffentliche Auftraggeber
 Statt des Atomic-Wegs lässt sich eine Rechnung auch schrittweise führen:
 anlegen (`POST /invoices/`) → finalisieren (`/finalize/`) → herunterladen
 (`/pdf/`, `/xml/`) → versenden (`/send/`) oder einreihen (`/dispatch/`).
+Nachlässe und Zuschläge auf Dokumentebene (`header_charges`, BG-20/21) kennt
+dieser Weg nicht: `POST /invoices/` lehnt ein mitgeschicktes, nicht leeres
+`header_charges` mit `400` ab (`code=schema`, `field=header_charges`), statt
+es still zu verwerfen. Dafür Atomic oder Convert verwenden.
 Listen sind paginiert und filterbar; per `mandant`-Filter lässt sich auf
 einen Mandanten einschränken.
 

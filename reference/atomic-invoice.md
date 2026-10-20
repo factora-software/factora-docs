@@ -164,7 +164,9 @@ dadurch nicht; das aufgelöste Profil steht immer in der Antwort.
 
 Der Server berechnet die Summen aus den Positionen und den Nachlässen und
 Zuschlägen auf Dokumentebene (`header_charges`) neu und vergleicht sie
-mit diesen Werten. **Toleranz: 0,02 € je Feld** (netto, USt., brutto), absolut
+mit diesen Werten. Vorab berechnen lassen sie sich mit
+`POST /api/v1/invoices/preview/` — dieselben `items` (mit
+`tax_category_code`) und dieselben `header_charges`, ohne Speicherung. **Toleranz: 0,02 € je Feld** (netto, USt., brutto), absolut
 gerechnet. Darüber wird die Anfrage mit **HTTP 400** abgelehnt; die Meldung
 nennt den berechneten und den gesendeten Wert.
 
@@ -395,7 +397,7 @@ Pflichtfelder je Position: `description`, `quantity`, `unit`,
 | `attribute_value` | string(200) | nein | `""` | BT-161 | Merkmalswert |
 | `gross_price` | decimal | nein | — | BT-148 | Bruttoeinzelpreis vor Positionsrabatt |
 | `price_discount` | decimal | nein | — | BT-147 | Preisnachlass (Brutto − Netto) |
-| `price_base_quantity` | decimal(…,3) | nein | — | BT-149 | Preisbasis-Menge |
+| `price_base_quantity` | decimal(…,3) | nein | — | BT-149 | Preisbasis-Menge: der Preis gilt je Basismenge, das Positionsnetto ist Menge × Preis / Basismenge (z. B. 1000 Stück zu 2,50 € je 100 = 25,00 €). Nicht negativ |
 | `price_base_quantity_unit` | string(3) | nein | `""` | BT-150 | Einheit der Preisbasis |
 
 ## Nachlässe und Zuschläge auf Dokumentebene — `header_charges[]` (BG-20/21)
@@ -408,8 +410,8 @@ Form wie bei `POST /api/v1/invoices/convert/`.
 | Feld | Typ | Pflicht | Default | BT | Bemerkung |
 |---|---|---|---|---|---|
 | `is_charge` | boolean | nein | `false` | — | `false` = Nachlass (BG-20), `true` = Zuschlag (BG-21) |
-| `amount` | decimal(…,2) | nein | `0.00` | BT-92 | Betrag, immer positiv (Zuschlag: BT-99). Wird **nicht** aus Basis × Prozentsatz berechnet |
-| `base_amount` | decimal(…,2) | nein | — | BT-93 | Basisbetrag (Zuschlag: BT-100) |
+| `amount` | decimal(…,2) | ja | — | BT-92 | Betrag, immer positiv (Zuschlag: BT-99). Wird **nie** aus Basis × Prozentsatz berechnet |
+| `base_amount` | decimal(…,2) | nein | — | BT-93 | Basisbetrag (Zuschlag: BT-100). Pflicht, sobald `percentage` gesendet wird |
 | `percentage` | decimal(…,2) | nein | — | BT-94 | Prozentsatz (Zuschlag: BT-101) |
 | `reason_text` | string(255) | bedingt | `""` | BT-97 | Grund (Zuschlag: BT-104). Grund **oder** Grund-Code ist Pflicht (BR-33 / BR-38) |
 | `reason_code` | string(16) | bedingt | `""` | BT-98 | Grund-Code, UNTDID 5189 für Nachlässe bzw. 7161 für Zuschläge (BT-105) |
@@ -426,10 +428,21 @@ Bemessungsgrundlage seiner Kategorie in der Steueraufschlüsselung (BG-23) und
 in den Summen; das Factora-PDF zeigt ihn als eigene Zeile unter der Summe der
 Positionen.
 
-**Der Betrag zählt.** `base_amount` und `percentage` werden in die Rechnung
-übernommen, aber nicht nachgerechnet. Fehlt `amount`, gilt 0,00 — enthalten
-Ihre `validation_totals` den Nachlass, lehnt die Summenprüfung die Anfrage
-dann mit HTTP 400 ab.
+**Der Betrag ist Pflicht und zählt.** Factora rechnet ihn nicht aus Basis und
+Prozentsatz aus — welche Rundung Ihr System verwendet hat, weiß nur Ihr System.
+Abgelehnt wird mit **HTTP 400** (`code = business`, Feld
+`header_charges.<n>.<feld>`):
+
+| Fall | `bt` | `rule` |
+|---|---|---|
+| `amount` fehlt — auch wenn `percentage` und `base_amount` da sind | `BT-92` (Zuschlag: `BT-99`) | `BR-31` (Zuschlag: `BR-36`) |
+| `percentage` ohne `base_amount` | `BT-93` (Zuschlag: `BT-100`) | `PEPPOL-EN16931-R041` |
+| `amount` weicht um mehr als 0,02 von `base_amount × percentage / 100` ab | `BT-92` (Zuschlag: `BT-99`) | `PEPPOL-EN16931-R040` |
+
+Grund: der Betrag gehört zum Entgelt, einer Pflichtangabe nach § 14 Abs. 4
+Nr. 7 UStG; das BMF-Schreiben vom 15.10.2026 (Rn. 8) ordnet die Pflichtangaben
+den Geschäftsbegriffen der EN 16931 zu, und dort ist der Betrag Pflicht
+(BR-31 / BR-36). Bis Version 0.11.85 galt ein fehlender Betrag als 0,00.
 
 ```json
 "header_charges": [
