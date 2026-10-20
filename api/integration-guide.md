@@ -195,7 +195,7 @@ Pro API-Schlüssel lassen sich **Standardwerte** hinterlegen, die automatisch in
 
 # 9. Limits & Tarife
 
-- Es gibt **einen** nutzungsbasierten API-Tarif; abgerechnet wird pro finalisierter Rechnung über die Console.
+- Es gibt **einen** nutzungsbasierten API-Tarif; abgerechnet wird pro finalisierter Rechnung und pro gültiger Live-Konvertierung (`POST /api/v1/invoices/convert/` mit `valid=true`; Convert ist erst nach Bestätigung der AGB 2.0 verfügbar, sonst `403`) über die Console.
 - **Tageslimit: 50.000 Aufrufe / 24 h** pro Schlüssel — ein Anti-Missbrauchs-Schutz, keine Preisstufe. Überschreitung → `429` mit `Retry-After`.
 - **Bis zu 20 Schlüssel** je Konto; die Last lässt sich darüber verteilen.
 - Sandbox-Aufrufe zählen nicht auf das Tageslimit.

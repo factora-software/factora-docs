@@ -34,8 +34,8 @@ maßgeblich**.
 | POST | `/invoices/{id}/send/` | Finalisierte Rechnung per E-Mail versenden | `invoices:write` | — |
 | GET | `/invoices/{id}/pdf/` | ZUGFeRD-PDF herunterladen | `invoices:read` | — |
 | GET | `/invoices/{id}/xml/` | XRechnung-XML herunterladen | `invoices:read` | — |
-| GET | `/invoices/{id}/xml/cii/` | CII/XRechnung-XML — finalisiert: das archivierte XML (= `/xml/`), Entwurf: aus dem aktuellen Stand erzeugt (B-AP91) | `invoices:read` | — |
-| GET | `/invoices/{id}/xml/ubl/` | UBL/Peppol-XML eines Entwurfs; finalisiert → `409` (kein UBL-Artefakt archiviert, kein Re-Rendern; B-AP91) | `invoices:read` | — |
+| GET | `/invoices/{id}/xml/cii/` | CII/XRechnung-XML — finalisiert: das archivierte XML (= `/xml/`, B-AP91); Entwurf: **entwertete Vorschau**, keine gültige E-Rechnung (BT-24 `FACTORA-DRAFT-INVALID#…`, Notiz „ENTWURF — KEINE GÜLTIGE RECHNUNG“; B-AP131) | `invoices:read` | — |
+| GET | `/invoices/{id}/xml/ubl/` | UBL/Peppol-XML eines Entwurfs als **entwertete Vorschau** (wie `/xml/cii/`, B-AP131); finalisiert → `409` (kein UBL-Artefakt archiviert, kein Re-Rendern; B-AP91) | `invoices:read` | — |
 | POST | `/invoices/{id}/dispatch/` | Rechnung zum Transport einreihen (E-Mail/Peppol) | `invoices:write` | — |
 | GET | `/invoices/{id}/dispatch-log/` | Versandhistorie abrufen | `invoices:read` | — |
 | GET | `/customers/` | Kunden auflisten | `customers:read` | — |
@@ -110,6 +110,17 @@ Positionen und Nachlass getrennt (höchstens 1 Cent Unterschied je Satz).
 Rendert EN-16931-Rechnungsdaten ohne Speicherung in geprüftes XML
 (CII/XRechnung oder UBL, je nach Rechnungstyp) und gibt KoSIT-Befunde zurück.
 Ideal, um die eigene Datenabbildung zu testen.
+
+**Abrechnung:** Jede gültige Live-Konvertierung (`valid=true`) ist eine
+abrechenbare Einheit wie eine finalisierte Rechnung — selbes Kontingent, selbe
+Staffel. `400`, `valid=false`, `503` und die Sandbox sind kostenfrei. Ein
+optionaler `Idempotency-Key` (UUID) lässt eine Wiederholung mit unverändertem
+Body einmal zählen; gespeichert wird dabei nichts von der Rechnung. Convert
+steht einem Konto erst nach Bestätigung der AGB 2.0 zur Verfügung (bei der
+Registrierung oder in der Console); ohne Bestätigung antwortet es mit `403`
+(`code = agb_confirmation_required`), bevor etwas gerendert wird. Wie jeder
+schreibende Live-Aufruf braucht Convert ein aktives Abo; ohne antwortet es mit
+`403`.
 
 ### Stammdaten vorab prüfen — `POST /parties/check/`
 

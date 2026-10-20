@@ -74,7 +74,7 @@ gespeichert.
 | Aspekt | Sandbox | Live |
 |---|---|---|
 | Speicherung | keine (Trockenlauf) | vollständig |
-| Erreichbare Endpunkte | nur Atomic + Hilfs­endpunkte (Preview/Convert) | alle |
+| Erreichbare Endpunkte | nur Atomic + Hilfs­endpunkte (Preview; Convert nicht) | alle |
 | Limits/Kontingent | übersprungen | angewendet (402 bei Limit, 409 bei Dublette) |
 | Idempotenz | optional | erforderlich |
 | Antwort-Status | `200` mit `meta.sandbox = true` | `201` bei Anlage |

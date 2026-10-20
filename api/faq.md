@@ -42,9 +42,9 @@ und Live-Keys (`fa_live_…`) lassen sich erzeugen.
 Der Tenant steht auf `pending_card`:
 - Daten und Keys bleiben erhalten
 - Sandbox-Keys funktionieren unverändert und kostenlos
-- Über Live-Keys sind nur lesende Aufrufe (GET / HEAD / OPTIONS) sowie
-  `POST /api/v1/invoices/convert/` (persistiert nichts) erreichbar;
-  jeder andere schreibende Aufruf wird abgelehnt
+- Über Live-Keys sind nur lesende Aufrufe (GET / HEAD / OPTIONS)
+  erreichbar; jeder schreibende Aufruf einschließlich
+  `POST /api/v1/invoices/convert/` wird mit `403` abgelehnt
 - Freischaltung jederzeit über den Stripe-Checkout im Abrechnungs-Tab
 
 Dasselbe Verhalten greift bei `paused` — das ist ein **kostenpflichtiges
@@ -61,11 +61,20 @@ Es gibt **einen** nutzungsbasierten API-Tarif — keine feste Preis-Leiter
 | Posten | Wert |
 |---|---|
 | Plattform-Gebühr | **49 €/Monat** netto |
-| 1–250 Live-Rechnungen/Monat | **0 €** (in Plattform-Gebühr enthalten) |
+| 1–250 Live-Rechnungen bzw. gültige Live-Konvertierungen/Monat | **0 €** (in Plattform-Gebühr enthalten) |
 | 251–1.000 | **0,12 €** / Rechnung |
 | ab 1.001 | **0,07 €** / Rechnung |
 | ab 5.001, nur mit Jahresvertrag (Mindestabnahme) | **0,04 €** / Rechnung |
 | Sandbox-Keys | kostenlos |
+
+**Abrechenbare Einheit** ist jede finalisierte Live-Rechnung und jede gültige
+Live-Konvertierung (`POST /api/v1/invoices/convert/` mit `valid=true`) — beide
+im selben Kontingent und in derselben Staffel. Kostenfrei sind `400`,
+`valid=false`, `503` und die Sandbox; eine Wiederholung mit demselben
+`Idempotency-Key` und unverändertem Body zählt einmal. Convert steht einem
+Konto erst nach Bestätigung der AGB 2.0 zur Verfügung — bei der Registrierung
+oder für bestehende Konten aktiv in der Console; ohne Bestätigung antwortet
+Convert mit `403`.
 
 Sandbox-Keys sind kostenlos zum Entwickeln und Testen; die Staffel ist
 graduiert und kontoweit gepoolt. Volumen-/Preisdetails immer in der
@@ -171,7 +180,7 @@ verteilen. Sandbox-Aufrufe zählen nicht mit.
 
 `Payment Required` — die Subscription ist nicht aktiv
 (`pending_card`, `paused`, `expired`, `canceled` oder `past_due`).
-Lesende Aufrufe und `/convert/` bleiben erreichbar, schreibende nicht.
+Lesende Aufrufe bleiben erreichbar, schreibende einschließlich `/convert/` nicht (`403`).
 Der Owner hinterlegt im Abrechnungs-Tab eine Zahlungsmethode bzw.
 reaktiviert das Abo über den Stripe-Checkout.
 

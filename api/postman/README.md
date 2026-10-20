@@ -11,7 +11,8 @@ headless via Newman.
    (für die finalisierte Rechnung exakt das archivierte XML, B-AP91)
 3. **1.3** UBL einer finalisierten Rechnung → `GET {{base_url}}/invoices/{id}/xml/ubl/`
    antwortet **409** mit Envelope (B-AP91: bei der Finalisierung wird nur
-   CII + PDF archiviert; UBL gibt es nur für Entwürfe). Der Schritt prüft
+   CII + PDF archiviert; UBL gibt es nur für Entwürfe, und dort nur als
+   entwertete Vorschau, B-AP131). Der Schritt prüft
    genau diesen Vertrag.
 4. **2.1** CII gegen KoSIT-XRechnung-Validator → `POST {{kosit_url}}/`
 
