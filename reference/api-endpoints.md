@@ -122,6 +122,11 @@ Registrierung oder in der Console); ohne Bestätigung antwortet es mit `403`
 schreibende Live-Aufruf braucht Convert ein aktives Abo; ohne antwortet es mit
 `403`.
 
+**Sandbox-Prüflauf:** Mit einem Sandbox-Key läuft derselbe Request durch
+dieselbe Erzeugung und KoSIT-Prüfung. Die Antwort trägt `valid`, alle Befunde,
+`format`, `profile` und die Summen des Dokuments in `data.totals`; `data.xml`
+ist `null`. Nichts wird abgerechnet. Das XML gibt es nur mit einem Live-Key.
+
 ### Stammdaten vorab prüfen — `POST /parties/check/`
 
 Prüft die Stammdaten einer Partei, bevor die erste Rechnung an sie geht. Es

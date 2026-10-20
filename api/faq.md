@@ -26,7 +26,9 @@ Nein — und es gibt auch keine Frist. Es existiert **kein zeitlich
 begrenzter Trial**. Nach der Registrierung stehen sofort **Sandbox-Keys**
 (`fa_test_…`) bereit, die **dauerhaft kostenlos** sind: `POST
 /api/v1/invoices/atomic/` läuft damit als Dry-Run durch dieselbe Pipeline
-(Validierung, Rendering), persistiert aber nichts (`sandbox: true`). Die
+(Validierung, Rendering), persistiert aber nichts (`sandbox: true`).
+`POST /api/v1/invoices/convert/` läuft mit einem Sandbox-Key als Prüflauf:
+KoSIT-Ergebnis und Summen, aber kein XML. Die
 Antwort enthält das Prüfergebnis und ein **sichtbar entwertetes PDF**
 (Wasserzeichen „FACTORA SANDBOX — UNGÜLTIG" bzw. „— INVALID" auf jeder
 Seite), damit Sie das

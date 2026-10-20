@@ -18,6 +18,7 @@ Sandbox-Schlüssel sind **nur** auf den persistenzfreien Endpunkten zugelassen:
 | Endpunkt | Verhalten mit Sandbox-Schlüssel |
 |---|---|
 | `POST /invoices/atomic/` | Trockenlauf: validiert, liefert das entwertete Vorschau-PDF, kein XML, speichert nichts |
+| `POST /invoices/convert/` | Prüflauf: dieselbe Erzeugung und KoSIT-Prüfung wie live, Antwort mit `valid`, `errors[]`, `format`, `profile` und den Summen des Dokuments in `data.totals` (BT-106 bis BT-115); `data.xml` ist `null`, nichts wird abgerechnet |
 | `POST /invoices/preview/` | Summen-Vorschau (dezimalgenau, inkl. Positions-Nachlässe und -Zuschläge sowie Nachlässe/Zuschläge auf Dokumentebene, `header_charges`) |
 
 Alle anderen v1-Endpunkte lehnen Sandbox-Schlüssel mit **403** ab — sie würden
