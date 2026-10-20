@@ -49,8 +49,9 @@ Der Tenant steht auf `pending_card`:
 
 Dasselbe Verhalten greift bei `paused` — das ist ein **kostenpflichtiges
 Abo mit fehlgeschlagener Zahlung**, nicht ein abgelaufener Testzeitraum.
-Finalisierte Rechnungen bleiben in jedem dieser Zustände abrufbar (GoBD:
-acht Jahre Aufbewahrung nach § 147 Abs. 3 AO).
+Finalisierte Rechnungen bleiben in jedem dieser Zustände abrufbar und
+exportierbar. Die Aufbewahrung (acht Jahre, § 147 Abs. 3 AO) liegt bei
+Ihnen — Factora archiviert nicht.
 
 ### Was kostet die API?
 
@@ -252,12 +253,14 @@ Ja, vor produktivem Einsatz. AVV wird beim Tarif-Upgrade automatisch
 zur Unterschrift gestellt (in Vorbereitung — bis dahin auf Anfrage:
 `legal@factora.software`).
 
-### Sind die Rechnungen revisionssicher (GoBD)?
+### Archiviert Factora meine Rechnungen (GoBD)?
 
-Ja. Finalisierte Rechnungen sind im Backend immutable (Number, Datum,
-Beträge, Customer-Snapshot, Audit-Log). Die Aufbewahrungspflicht (acht
-Jahre, § 147 Abs. 3 AO i.V.m. § 14b Abs. 1 UStG) liegt beim Rechnungssteller — Factora archiviert solange der Tenant
-aktiv ist.
+Nein. Finalisierte Rechnungen sind unveränderlich (Nummer, Datum, Beträge,
+Customer-Snapshot, Änderungsprotokoll) und bis zum Ende der Abruffrist nach
+AGB § 20 abruf- und exportierbar. Die Aufbewahrungspflicht (acht Jahre,
+§ 147 Abs. 3 AO i.V.m. § 14b Abs. 1 UStG) liegt beim Rechnungssteller —
+exportieren Sie die Rechnungen in Ihr eigenes Archiv
+([Exporte](../reference/exports.md)).
 
 ## Support
 

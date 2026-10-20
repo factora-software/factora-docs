@@ -15,8 +15,9 @@ Rechnungsdaten in einem strukturierten Format entgegen und erzeugt daraus
 gesetzeskonforme elektronische Rechnungen nach **EN 16931** — als
 **XRechnung** (CII), **ZUGFeRD** (PDF/A-3 mit eingebetteter XML) und
 **Peppol/UBL**. Jede finalisierte Rechnung wird gegen das amtliche
-Regelwerk geprüft, revisionssicher (GoBD) archiviert und kann per DATEV
-exportiert werden.
+Regelwerk geprüft und kann per DATEV und als ZIP für Ihr eigenes Archiv
+exportiert werden — die Aufbewahrung nach GoBD liegt bei Ihnen, Factora
+archiviert nicht.
 
 Es gibt zwei Wege, Factora zu nutzen:
 
@@ -41,8 +42,9 @@ Es gibt zwei Wege, Factora zu nutzen:
 - [Steuerlogik](tax-logic.md) — alle USt-Kategorien, Steuersätze,
   Befreiungsgründe, §13b Reverse Charge, innergemeinschaftliche Lieferung,
   Ausfuhr, §19 Kleinunternehmer, grenzüberschreitende Logik, Prüfregeln.
-- [Compliance & Archivierung](compliance.md) — GoBD-Unveränderlichkeit,
-  verschlüsseltes Archiv, Änderungsprotokoll, EN-16931-Validierung.
+- [Compliance & Aufbewahrung](compliance.md) — Unveränderlichkeit,
+  Ablage bis Vertragsende, Änderungsprotokoll, EN-16931-Validierung;
+  die Aufbewahrung liegt bei Ihnen.
 
 ### Öffentliche API
 
@@ -60,7 +62,7 @@ Es gibt zwei Wege, Factora zu nutzen:
   Summen, Anhänge) mit Typ, Pflicht/Optional, Default und EN-16931-Bezug.
 - [Webhooks](webhooks.md) — Ereignistypen, Signaturprüfung, Zustellung &
   Wiederholungslogik.
-- [Exporte](exports.md) — DATEV-Export (Buchungsdaten), Rechnungsarchiv als ZIP.
+- [Exporte](exports.md) — DATEV-Export (Buchungsdaten), Rechnungen als ZIP für Ihr Archiv.
 
 ## Konventionen in dieser Referenz
 

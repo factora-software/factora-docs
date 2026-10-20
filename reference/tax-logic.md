@@ -273,7 +273,7 @@ geprüft.
 Die Prüfung läuft auf **jedem schreibenden Weg**: `POST /api/v1/invoices/atomic/`
 (live und Sandbox) und `POST /api/v1/invoices/{id}/finalize/`. Sie greift, bevor
 ein Dokument entsteht — bei einem Treffer wird nichts gespeichert und nichts
-archiviert. Sie ist Teil der Finalisierungsoperation selbst, nicht des
+abgelegt. Sie ist Teil der Finalisierungsoperation selbst, nicht des
 Endpunkts (B-AP90): auch interne Wege, die eine Rechnung final oder
 freigegeben setzen, laufen durch dieselbe Prüfung.
 
@@ -344,4 +344,4 @@ Rechnung einen VIES-Aufruf aus.
 
 Steuerkategorie, Satz und Befreiungsgründe werden bei der Finalisierung als
 Snapshot **eingefroren**, damit XML und PDF jederzeit reproduzierbar bleiben.
-Siehe [Compliance & Archivierung](compliance.md).
+Siehe [Compliance & Aufbewahrung](compliance.md).

@@ -66,10 +66,10 @@ Debitorennummer. Fehlt sie (Altbestand), greift ein synthetischer Fallback
 | 400 | `date_from`/`date_to` fehlt | `schema` |
 | 400 | Datum nicht im Format `YYYY-MM-DD` | `schema` |
 
-## Rechnungsarchiv als ZIP — `GET /api/v1/exports/invoices/`
+## Rechnungen als ZIP für Ihr Archiv — `GET /api/v1/exports/invoices/`
 
 Liefert alle finalisierten Rechnungen eines Zeitraums als ZIP — je Rechnung
-die bei der Finalisierung archivierte **PDF** und **XML**, dazu ein Index und
+die bei der Finalisierung gespeicherte **PDF** und **XML**, dazu ein Index und
 ein Manifest. Gedacht für Ihr eigenes Archiv, die Betriebsprüfung und den
 Systemwechsel. **Die Aufbewahrung nach GoBD / § 147 AO liegt bei Ihnen** —
 Factora archiviert Ihre Rechnungen nicht. Für den laufenden Abruf einzelner Rechnungen sind `/invoices/{id}/pdf/` und
@@ -90,14 +90,14 @@ Abruf; enthält der Zeitraum mehr, antwortet der Endpunkt mit `400`
 
 | Datei | Inhalt |
 |---|---|
-| `rechnungen/<Nr>.pdf` | archivierte ZUGFeRD-PDF der Rechnung |
-| `rechnungen/<Nr>.xml` | archiviertes XRechnung-/CII-XML der Rechnung |
+| `rechnungen/<Nr>.pdf` | gespeicherte ZUGFeRD-PDF der Rechnung |
+| `rechnungen/<Nr>.xml` | gespeichertes XRechnung-/CII-XML der Rechnung |
 | `index.csv` | Übersicht aller Rechnungen (Semikolon, UTF-8 mit BOM, Excel-kompatibel) |
 | `index.json` | derselbe Index, maschinenlesbar (`export_info`, `invoices[]`) |
 | `manifest.json` | Vollständigkeit: welche Dateien fehlen und warum |
-| `README.txt` | Beschreibung des Archivs |
+| `README.txt` | Beschreibung des ZIP |
 
-Das ZIP trägt ausschließlich die bei der Finalisierung archivierten Dateien;
+Das ZIP trägt ausschließlich die bei der Finalisierung gespeicherten Dateien;
 nichts wird beim Export neu erzeugt.
 
 ### Prüfnachweis je Rechnung
@@ -114,7 +114,7 @@ Prüfung nicht aufgezeichnet.
 ### Vollständigkeit und Manifest
 
 Kann eine Datei nicht aufgenommen werden — etwa weil zu einer Rechnung kein
-archiviertes Dokument vorliegt oder der Speicher nicht lesbar ist —, wird das
+gespeichertes Dokument vorliegt oder der Speicher nicht lesbar ist —, wird das
 ZIP trotzdem geliefert. Dann gilt:
 
 - Der Pfad der fehlenden Datei bleibt in `index.csv` und `index.json`
@@ -161,6 +161,6 @@ Ein vollständiger Export hat `complete: true`, `missing: []` und den Header
 - **Rechnungsdokumente**: ZUGFeRD-PDF und XRechnung-/UBL-XML lassen sich pro
   Rechnung über die Rechnungs-Endpunkte herunterladen (siehe
   [Endpoints](api-endpoints.md)); für viele Rechnungen auf einmal das
-  ZIP-Archiv oben.
+  ZIP oben.
 - **Konto-Datenexport**: vollständiger Export der eigenen Kontodaten auf
-  Anforderung (siehe [Compliance & Archivierung](compliance.md)).
+  Anforderung (siehe [Compliance & Aufbewahrung](compliance.md)).

@@ -552,7 +552,7 @@ Welche Dateien Sie bekommen, stellen Sie in der Console unter
 | **an** | ZUGFeRD-PDF mit Ihrem Branding | fehlt — Antwort wie bisher | E-Rechnung |
 
 Ist die Einstellung aus, prüft, entscheidet (Steuer), validiert (KoSIT),
-archiviert und berechnet Factora die Rechnung genauso — nur ein Factora-PDF
+speichert und berechnet Factora die Rechnung genauso — nur ein Factora-PDF
 entsteht nicht. Die Ansicht für den Käufer erzeugen Sie in Ihrer eigenen
 Vorlage aus `data.invoice`.
 
@@ -560,8 +560,8 @@ Vorlage aus `data.invoice`.
 Format nach EN 16931; ein PDF allein ist keine E-Rechnung. Übermitteln Sie
 Ihre eigene PDF-Ansicht zusammen mit dem XML, ist sie ein zusätzliches
 Dokument — weicht sie vom XML ab, gilt das XML. Alle Pflichtangaben müssen im
-XML stehen. Aufzubewahren ist mindestens das XML, unverändert (Factora
-archiviert es). Quellen:
+XML stehen. Aufzubewahren ist mindestens das XML, unverändert — durch Sie;
+Factora archiviert nicht. Quellen:
 [BMF — FAQ E-Rechnung](https://www.bundesfinanzministerium.de/Content/DE/FAQ/e-rechnung.html)
 (Nr. 12a, 13),
 [BStBK — FAQ E-Rechnung](https://www.bstbk.de/downloads/bstbk/steuerrecht-und-rechnungslegung/fachinfos/BStBK_FAQ_E-Rechnung_final.pdf)

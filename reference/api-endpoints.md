@@ -34,8 +34,8 @@ maßgeblich**.
 | POST | `/invoices/{id}/send/` | Finalisierte Rechnung per E-Mail versenden | `invoices:write` | — |
 | GET | `/invoices/{id}/pdf/` | ZUGFeRD-PDF herunterladen | `invoices:read` | — |
 | GET | `/invoices/{id}/xml/` | XRechnung-XML herunterladen | `invoices:read` | — |
-| GET | `/invoices/{id}/xml/cii/` | CII/XRechnung-XML — finalisiert: das archivierte XML (= `/xml/`, B-AP91); Entwurf: **entwertete Vorschau**, keine gültige E-Rechnung (BT-24 `FACTORA-DRAFT-INVALID#…`, Notiz „ENTWURF — KEINE GÜLTIGE RECHNUNG“; B-AP131) | `invoices:read` | — |
-| GET | `/invoices/{id}/xml/ubl/` | UBL/Peppol-XML eines Entwurfs als **entwertete Vorschau** (wie `/xml/cii/`, B-AP131); finalisiert → `409` (kein UBL-Artefakt archiviert, kein Re-Rendern; B-AP91) | `invoices:read` | — |
+| GET | `/invoices/{id}/xml/cii/` | CII/XRechnung-XML — finalisiert: das gespeicherte XML (= `/xml/`, B-AP91); Entwurf: **entwertete Vorschau**, keine gültige E-Rechnung (BT-24 `FACTORA-DRAFT-INVALID#…`, Notiz „ENTWURF — KEINE GÜLTIGE RECHNUNG“; B-AP131) | `invoices:read` | — |
+| GET | `/invoices/{id}/xml/ubl/` | UBL/Peppol-XML eines Entwurfs als **entwertete Vorschau** (wie `/xml/cii/`, B-AP131); finalisiert → `409` (kein UBL-Artefakt gespeichert, kein Re-Rendern; B-AP91) | `invoices:read` | — |
 | POST | `/invoices/{id}/dispatch/` | Rechnung zum Transport einreihen (E-Mail/Peppol) | `invoices:write` | — |
 | GET | `/invoices/{id}/dispatch-log/` | Versandhistorie abrufen | `invoices:read` | — |
 | GET | `/customers/` | Kunden auflisten | `customers:read` | — |
@@ -54,7 +54,7 @@ maßgeblich**.
 | PATCH | `/mandanten/{id}/footer-logos/{logo_id}/` | Fußzeilen-Logo verschieben (`position`, `sort_order`) | `mandanten:write` | — |
 | DELETE | `/mandanten/{id}/footer-logos/{logo_id}/` | Fußzeilen-Logo entfernen | `mandanten:write` | — |
 | GET | `/exports/datev/` | DATEV-Buchungsdaten als CSV | `exports:read` | — |
-| GET | `/exports/invoices/` | Rechnungsarchiv (PDF + XML) als ZIP mit Index und Manifest | `exports:read` | — |
+| GET | `/exports/invoices/` | Rechnungen (PDF + XML) als ZIP für Ihr Archiv, mit Index und Manifest | `exports:read` | — |
 | GET | `/webhooks/` | Webhooks auflisten | `webhooks:read` | — |
 | POST | `/webhooks/` | Webhook anlegen | `webhooks:write` | — |
 | GET | `/webhooks/{id}/` | Webhook abrufen | `webhooks:read` | — |

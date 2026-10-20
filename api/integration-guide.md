@@ -154,7 +154,7 @@ Die wichtigsten Bausteine des Request-Bodys:
 | --- | --- |
 | invoice_header | Kopfdaten: Nummer, Datum, Fälligkeit, Referenzen (u. a. BT-10 buyer_reference, BT-13 order_reference). |
 | invoice_header.profile | Optional. Semantisches Profil: `xrechnung` (deutscher CIUS inkl. BR-DE, Standard) oder `en16931` (europäisches Kernmodell). Weggelassen = `xrechnung`. Unabhängig vom Ausgabeformat; das aufgelöste Profil steht immer in der Antwort unter `profile`. |
-| seller_snapshot | Verkäuferdaten inkl. IBAN/USt-IdNr. — wird GoBD-konform eingefroren. |
+| seller_snapshot | Verkäuferdaten inkl. IBAN/USt-IdNr. — wird bei der Finalisierung unveränderlich eingefroren. |
 | buyer | Käuferdaten; buyer.contact.email = BT-58. Kunde wird bei Bedarf automatisch angelegt/gefunden. |
 | items[] | Positionen: Beschreibung, Menge, Einheit (UNCL5272), Nettopreis, USt-Satz, optional Rabatte/Zuschläge/Klassifizierung. |
 | validation_totals | Ihre ERP-Summen. Factora rechnet nach und weist Abweichungen ab (Schutz vor Rundungs-/Logikfehlern). |
