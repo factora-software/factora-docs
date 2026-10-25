@@ -3,9 +3,12 @@
 Factora erzeugt und prüft Rechnungen und gibt sie zurück. **Factora archiviert
 Ihre Rechnungen nicht:** die Aufbewahrung nach GoBD, § 147 AO und § 14b UStG
 liegt bei Ihnen (AGB § 20 Abs. 5, AVV § 10 Abs. 3). Finalisierte Rechnungen
-sind unveränderlich, jede Statusänderung wird protokolliert, und bis zum Ende
-der Abruffrist nach AGB § 20 können Sie jede Rechnung abrufen und für Ihr
-eigenes Archiv exportieren ([Exporte](exports.md)).
+sind unveränderlich, jede Statusänderung wird protokolliert, und bis zum
+monatlichen Export (AGB § 4 Abs. 6) können Sie jede Rechnung abrufen und für
+Ihr eigenes Archiv exportieren ([Exporte](exports.md)). Mit hinterlegter
+Export-Adresse löscht Factora die exportierten Rechnungen nach vollständigem
+Abruf des Download-Links, spätestens nach 30 Tagen; ohne Export-Adresse wird
+nie gelöscht.
 
 ## Unveränderlichkeit finalisierter Rechnungen (GoBD)
 
@@ -30,7 +33,7 @@ Rechnung kann nicht gelöscht, sondern nur über eine
 
 Bei der Finalisierung wird die Rechnung verschlüsselt abgelegt, damit Sie sie
 abrufen und exportieren können. Diese Ablage ist kein Archiv im Sinne der
-GoBD: sie endet mit der Abruffrist nach AGB § 20, danach wird gelöscht. Dabei werden die Metadaten (Nummer, Datum, Empfänger, Positionen,
+GoBD: sie endet mit dem monatlichen Export (AGB § 4 Abs. 6) bzw. spätestens mit der Abruffrist nach AGB § 20, danach wird gelöscht. Dabei werden die Metadaten (Nummer, Datum, Empfänger, Positionen,
 Beträge) erfasst und über einen **SHA-256-Integritätshash** gesichert, sodass
 nachträgliche Veränderungen erkennbar wären. Der Ablagestatus jeder Rechnung
 ist nachvollziehbar (`archive_status`: `pending` / `archived` / `failed`).

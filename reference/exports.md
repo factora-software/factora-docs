@@ -72,7 +72,11 @@ Liefert alle finalisierten Rechnungen eines Zeitraums als ZIP — je Rechnung
 die bei der Finalisierung gespeicherte **PDF** und **XML**, dazu ein Index und
 ein Manifest. Gedacht für Ihr eigenes Archiv, die Betriebsprüfung und den
 Systemwechsel. **Die Aufbewahrung nach GoBD / § 147 AO liegt bei Ihnen** —
-Factora archiviert Ihre Rechnungen nicht. Für den laufenden Abruf einzelner Rechnungen sind `/invoices/{id}/pdf/` und
+Factora archiviert Ihre Rechnungen nicht und speichert sie nur bis zum
+monatlichen Export: Mit hinterlegter Export-Adresse schickt Factora zum
+Stichtag einen Download-Link (nur nach Anmeldung, 30 Tage gültig) und löscht
+die exportierten Rechnungen nach vollständigem Abruf, spätestens nach 30
+Tagen (AGB § 4 Abs. 6). Für den laufenden Abruf einzelner Rechnungen sind `/invoices/{id}/pdf/` und
 `/invoices/{id}/xml/` der richtige Weg.
 
 ### Parameter

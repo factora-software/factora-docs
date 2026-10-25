@@ -20,7 +20,7 @@ Mandanten (`t_…`, nicht umkehrbar).
 
 - **Keine Rechtsgültigkeit der Forderung** und keine steuerliche Richtigkeit
   der Angaben — geprüft wird die Form gegen das Regelwerk, nicht der Sachverhalt.
-- **Keine Archivierung.** Factora speichert keine Rechnung (AGB 2.1); der
+- **Keine Archivierung.** Factora archiviert nicht und speichert Rechnungen nur bis zum Monatsexport (AGB 2.2, § 4 Abs. 6); der
   Nachweis ersetzt die Aufbewahrung nicht. Er ist nur zusammen mit der Datei
   aussagekräftig.
 - **Kein Beleg für Sandbox-Dokumente.** Ein Sandbox-Nachweis trägt
