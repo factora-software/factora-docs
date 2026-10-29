@@ -11,7 +11,7 @@ bestimmt die rechtliche Einordnung sowie die Struktur des erzeugten Dokuments.
 | **380** | Rechnung | Standard-Rechnung (Voreinstellung) |
 | **381** | Korrektur als Minderung | Berichtigt eine Rechnung, indem sie den Betrag mindert (Credit Note), z. B. ein Storno |
 | **384** | Korrekturrechnung | Berichtigt eine Rechnung, indem sie sie ersetzt |
-| **386** | Abschlagsrechnung | Voraus-/Teilzahlung (auch kumulierte Abschläge) |
+| **386** | Abschlagsrechnung | Voraus-/Teilzahlung (auch kumulierte Abschläge). Unter dem Profil `xrechnung` nicht zulässig (BR-DE-17) — `invoice_header.profile` auf `en16931` setzen, siehe [Beispiel](../api/examples/06_abschlag_386.json) |
 | **389** | Gutschrift (Gutschriftverfahren / Self-Billing) | Der Leistungsempfänger stellt die Rechnung im Namen des Leistenden aus (§ 14 Abs. 2 UStG) |
 
 Über die öffentliche API wird der Typ im Feld `invoice_header.invoice_type`

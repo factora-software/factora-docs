@@ -1,0 +1,59 @@
+{
+  "api_mode": "atomic_single_post",
+  "invoice_header": {
+    "invoice_number": "RE-2026-0005",
+    "invoice_date": "2026-05-22",
+    "payment_due_date": "2026-06-21",
+    "buyer_reference": "PO-2026-001",
+    "profile": "xrechnung"
+  },
+  "seller_snapshot": {
+    "name": "Muster GmbH",
+    "street": "Hauptstr. 1",
+    "zip": "10115",
+    "city": "Berlin",
+    "vat_id": "DE123456789",
+    "iban": "DE21500500009876543210",
+    "contact": {
+      "name": "E. Musterfrau",
+      "phone": "+49 30 1234567",
+      "email": "rechnung@muster.example"
+    }
+  },
+  "buyer": {
+    "name": "Beispiel AG",
+    "street": "1 Rue de la Paix",
+    "zip": "75002",
+    "city": "Paris",
+    "country": "FR",
+    "contact": {
+      "email": "einkauf@beispiel.example"
+    },
+    "vat_id": "FR40303265045"
+  },
+  "items": [
+    {
+      "description": "Warenlieferung",
+      "quantity": "1.000",
+      "unit": "C62",
+      "unit_price_net": "100.00",
+      "vat_rate": "0.00",
+      "tax_category_code": "K",
+      "tax_exemption_reason_code": "VATEX-EU-IC",
+      "tax_exemption_reason_text": "Innergemeinschaftliche Lieferung (§ 4 Nr. 1b UStG)",
+      "supply_type": "goods"
+    }
+  ],
+  "validation_totals": {
+    "net_amount": "100.00",
+    "vat_amount": "0.00",
+    "gross_amount": "100.00"
+  },
+  "shipping": {
+    "name": "Kunde SA Lager",
+    "street": "1 Rue de la Paix",
+    "zip": "75002",
+    "city": "Paris",
+    "country": "FR"
+  }
+}

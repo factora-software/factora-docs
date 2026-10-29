@@ -1,0 +1,50 @@
+{
+  "api_mode": "atomic_single_post",
+  "invoice_header": {
+    "invoice_number": "RE-2026-0003",
+    "invoice_date": "2026-05-22",
+    "payment_due_date": "2026-06-21",
+    "buyer_reference": "PO-2026-001",
+    "profile": "en16931"
+  },
+  "seller_snapshot": {
+    "name": "Muster GmbH",
+    "street": "Hauptstr. 1",
+    "zip": "10115",
+    "city": "Berlin",
+    "vat_id": "DE123456789",
+    "iban": "DE21500500009876543210",
+    "contact": {
+      "name": "E. Musterfrau",
+      "phone": "+49 30 1234567",
+      "email": "rechnung@muster.example"
+    }
+  },
+  "buyer": {
+    "name": "Beispiel AG",
+    "street": "Bahnhofstr. 2",
+    "zip": "60486",
+    "city": "Frankfurt am Main",
+    "country": "DE",
+    "contact": {
+      "email": "einkauf@beispiel.example"
+    }
+  },
+  "items": [
+    {
+      "description": "Schulung (steuerfrei)",
+      "quantity": "1.000",
+      "unit": "C62",
+      "unit_price_net": "100.00",
+      "vat_rate": "0.00",
+      "tax_category_code": "E",
+      "tax_exemption_reason_code": "VATEX-EU-132-1I",
+      "tax_exemption_reason_text": "Steuerfreie Bildungsleistung, § 4 Nr. 21 UStG"
+    }
+  ],
+  "validation_totals": {
+    "net_amount": "100.00",
+    "vat_amount": "0.00",
+    "gross_amount": "100.00"
+  }
+}

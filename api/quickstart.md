@@ -27,8 +27,9 @@ Drei Schritte, kein Code, keine Datei anlegen.
 2. Im Menü **Quickstart** öffnen — direkt:
    `https://console.factora.software/dashboard/quickstart`
 3. Der Quickstart legt den **Sandbox-Schlüssel** an, zeigt einen
-   **vollständigen Beispiel-Request** samt fertigem `curl` und hat einen
-   Knopf **„Test-Request senden"**. Ein Klick, und die Antwort steht darunter.
+   **vollständigen Beispiel-Request** samt fertigem `curl`. Den Schlüssel
+   fügen Sie in das Feld darunter ein und klicken **„Request prüfen"**;
+   die Antwort steht darunter.
 
 Danach haben Sie einen Schlüssel, einen funktionierenden Request und die
 Bestätigung, dass die Kette steht. Erst dann lohnt sich der Blick in die
@@ -187,7 +188,8 @@ Derselbe Rumpf noch einmal einzeln, zum Kopieren in ein Werkzeug Ihrer Wahl:
 Der Header **`Idempotency-Key`** (UUID, Gültigkeit 48 h) verhindert
 Duplikat-Rechnungen: Bei identischem Schlüssel wird die ursprüngliche Antwort
 zurückgegeben — sicher für Wiederholungen. Auf `POST /invoices/atomic/` ist
-er **Pflicht**.
+er im **Live-Betrieb Pflicht**; mit einem Sandbox-Schlüssel (nichts wird
+gespeichert) läuft der Aufruf auch ohne ihn.
 
 ## 4. Antwortstruktur
 
@@ -227,6 +229,29 @@ Die vollständige Endpunktliste mit Scopes und Sandbox-Eignung steht unter
 [Endpoints](../reference/api-endpoints.md), das komplette Feldschema unter
 [Atomic Invoice](../reference/atomic-invoice.md) — dort auch, welche Felder
 das Profil `xrechnung` zusätzlich verlangt.
+
+## 6. Beispiele je Rechnungsart
+
+Zehn fertige Rümpfe liegen unter [`examples/`](examples/). Jeder läuft
+**unverändert** mit einem Sandbox-Schlüssel durch (ein Test sendet sie bei jeder
+Änderung gegen die Sandbox). Mit `curl -d @datei.json` absenden, nur
+Rechnungsnummer und Datum nach Bedarf anpassen:
+
+| Datei | Rechnungsart |
+|---|---|
+| [`examples/01_standard_380_19.json`](examples/01_standard_380_19.json) | Rechnung 380, 19 % (Kategorie S) |
+| [`examples/02_standard_380_7.json`](examples/02_standard_380_7.json) | Rechnung 380, 7 % |
+| [`examples/03_steuerfrei_e.json`](examples/03_steuerfrei_e.json) | Steuerfreie Leistung, Kategorie E (mit BT-120/BT-121) |
+| [`examples/04_reverse_charge_ae.json`](examples/04_reverse_charge_ae.json) | Reverse Charge § 13b, Kategorie AE |
+| [`examples/05_innergemeinschaftlich_k.json`](examples/05_innergemeinschaftlich_k.json) | Innergemeinschaftliche Lieferung, Kategorie K |
+| [`examples/06_abschlag_386.json`](examples/06_abschlag_386.json) | Abschlagsrechnung 386 (Profil `en16931`: der TypeCode 386 ist unter `xrechnung` nicht zulässig, BR-DE-17) |
+| [`examples/07_schlussrechnung.json`](examples/07_schlussrechnung.json) | Schlussrechnung (`prepaid_amount` Pflicht) |
+| [`examples/08_korrektur_384.json`](examples/08_korrektur_384.json) | Korrekturrechnung 384 (Bezug auf die ursprüngliche Rechnung) |
+| [`examples/09_minderung_381.json`](examples/09_minderung_381.json) | Korrektur als Minderung 381 |
+| [`examples/10_gutschrift_389.json`](examples/10_gutschrift_389.json) | Gutschrift / Self-Billing 389 |
+
+Die Beispiele zeigen das Format, keine steuerliche Beratung: Kategorie und
+Befreiungsgrund erklären **Sie** (siehe [Steuerlogik](../reference/tax-logic.md)).
 
 ---
 
