@@ -52,7 +52,7 @@ Der Satz wird je Position im Feld `vat_rate` als Prozentwert übergeben
 | Verkäufer sitzt in | gültige Sätze |
 |---|---|
 | **Deutschland** (Vorgabe) | 19 %, 7 %, 0 % |
-| **EU-Mitgliedstaat** | Normal- und ermäßigte Sätze dieses Landes plus 0 % (z. B. AT: 20 %, 13 %, 10 %, 0 %) |
+| **EU-Mitgliedstaat** | Normal- und ermäßigte Sätze dieses Landes plus 0 % (z. B. NL: 21 %, 9 %, 0 %) |
 | **außerhalb der EU** | wird abgelehnt — für diese Länder liegen uns keine Sätze vor |
 
 0 % ist überall möglich: befreite, Reverse-Charge- und innergemeinschaftliche
@@ -134,7 +134,7 @@ EU-grenzüberschreitende Lieferung an einen Unternehmer mit USt-IdNr.
 - Käufer-**USt-IdNr.** vorhanden.
 - **VIES-Prüfung** der USt-IdNr.: ungültig → blockiert; nicht erreichbar →
   nicht-blockierende Warnung mit späterer Wiederholung.
-- Hinweis auf fehlenden **Gelangensnachweis** (§17a UStDV) als Warnung.
+- Hinweis auf fehlenden **Gelangensnachweis** (§17b UStDV) als Warnung.
 
 ## Ausfuhrlieferung (G) — §4 Nr. 1a
 
@@ -154,7 +154,7 @@ Bei Kleinunternehmer-Profil:
 - Kategorie **E**, Befreiungstext „Kleinunternehmer gemäß §19 UStG" ist
   Pflicht.
 - VATEX-Code (BT-121) muss **leer** bleiben.
-- Dokument-Hinweis: „Gemäß §19 UStG wird keine Umsatzsteuer berechnet."
+- Dokument-Hinweis (§ 34a Nr. 5 UStDV): „Für die Lieferung oder sonstige Leistung gilt die Steuerbefreiung für Kleinunternehmer (§ 19 UStG)."
 
 ## Steuerlicher Vertreter (BG-11/12)
 
