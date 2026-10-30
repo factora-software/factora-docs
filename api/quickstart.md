@@ -232,7 +232,7 @@ das Profil `xrechnung` zusätzlich verlangt.
 
 ## 6. Beispiele je Rechnungsart
 
-Zehn fertige Rümpfe liegen unter [`examples/`](examples/). Jeder läuft
+Elf fertige Rümpfe liegen unter [`examples/`](examples/). Jeder läuft
 **unverändert** mit einem Sandbox-Schlüssel durch (ein Test sendet sie bei jeder
 Änderung gegen die Sandbox). Mit `curl -d @datei.json` absenden, nur
 Rechnungsnummer und Datum nach Bedarf anpassen:
@@ -249,6 +249,12 @@ Rechnungsnummer und Datum nach Bedarf anpassen:
 | [`examples/08_korrektur_384.json`](examples/08_korrektur_384.json) | Korrekturrechnung 384 (Bezug auf die ursprüngliche Rechnung) |
 | [`examples/09_minderung_381.json`](examples/09_minderung_381.json) | Korrektur als Minderung 381 |
 | [`examples/10_gutschrift_389.json`](examples/10_gutschrift_389.json) | Gutschrift / Self-Billing 389 |
+| [`examples/11_kleinunternehmer_19.json`](examples/11_kleinunternehmer_19.json) | Verkäufer ist Kleinunternehmer (§ 19 UStG): Satz 0 %, Kategorie E, nur Befreiungstext |
+
+**Annahme:** Die Beispiele 01–10 setzen einen **regelbesteuerten** Verkäufer voraus (Steuerausweis 19 %/7 %).
+Ist Ihr Konto als **Kleinunternehmer** (§ 19 UStG) hinterlegt, lehnt die API sie mit `400` ab
+(`TAX_RATE_CONTRADICTS_CATEGORY`): dann Beispiel 11 nehmen — Satz `0.00`, Kategorie `E`, Befreiungstext
+„Kleinunternehmer gemäß §19 UStG", **kein** VATEX-Code (BT-121).
 
 Die Beispiele zeigen das Format, keine steuerliche Beratung: Kategorie und
 Befreiungsgrund erklären **Sie** (siehe [Steuerlogik](../reference/tax-logic.md)).
